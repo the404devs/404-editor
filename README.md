@@ -3,4 +3,4 @@
 
 an online collaborative code editor. i keep meaning to rewrite this thing, but i never get around to it. oh well.
 
-http://the404.nl/editor/
+https://the404devs.github.io/404editor/
