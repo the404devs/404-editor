@@ -1,27 +1,58 @@
+var firebaseConfig = {
+    apiKey: "AIzaSyB4NTU1ziKd7YcrNzpPZSKU6ZKyJwX81zI",
+    authDomain: "editor-8a0f1.firebaseapp.com",
+    databaseURL: "https://editor-8a0f1.firebaseio.com",
+    projectId: "editor-8a0f1",
+    storageBucket: "editor-8a0f1.appspot.com",
+    messagingSenderId: "215947375655",
+    appId: "1:215947375655:web:315951007d76fd7d060a02"
+};
+// Initialize Firebase
+firebase.initializeApp(firebaseConfig);
+
 //Global state vars
 var db = firebase.database(); //Reference to the database
+var doc;
+var editor;
 var editorValues; //Collection of all editors
 var editorId; //Current editor
-var makeNew; //Bool, are we creating a new editor?
-var deleted = false; //Has our editor just been deleted?
-var keyChanged = false; //Has our key just been changed?
+var applyingDeltas = false;
+var currentEditorValue = null;
+var queueRef = null;
+var uid = Math.random().toString();
 
-$(function() {
+$('#id-input').keypress(function(e) { if (e.keyCode == 13) { join(); } });
 
-    // Get the editor id, using Url.js
-    // The queryString method returns the value of the id querystring parameter
-    editorId = Url.queryString("id") || "PUBLIC"; //If no id is given, we show the public workspace
-    document.getElementById("workspaceName").innerHTML = "Workspace: " + sanitize(editorId); //Display the name of the editor on the page
-    //If we're on the public workspace, we remove the preferences pop-up, as well as the settings, delete, and download buttons.
-    if (editorId == "PUBLIC") {
-        document.getElementById("prefmodal").remove();
-        document.getElementById("popcan2").remove();
-        document.getElementById("popcan3").remove();
-        document.getElementById("popcan5").remove();
+var join = function() {
+    var id = sanitize($("#id-input").val());
+    if (id === "" || id === null) {
+        console.log("bad");
+        return;
     }
-    //queryString to see if we're making a new workspace
-    makeNew = (Url.queryString("makeNew") == 'true')
-    var editorKey = Url.queryString("key") || null; //Get the key from the url. null if there is none
+    $("#join-modal").fadeOut();
+    $("#id-input").val("");
+    closeNav();
+    init(id);
+}
+
+var init = function(id) {
+    editorId = id; //set editor id
+
+    //reset event listeners
+    if (currentEditorValue) {
+        if (currentEditorValue.key == editorId) { return; }
+        currentEditorValue.child("content").off("value");
+        currentEditorValue.child("lang").off("value");
+    }
+    if (queueRef) { queueRef.off("child_added") }
+    if (editor) { editor.off("change") }
+
+    //if no id is specified just stop
+    if (!editorId) {
+        return;
+    }
+
+    $("#workspace-name").html("<b>Workspace:</b> " + sanitize(editorId)); //Display the name of the editor on the page
 
     // This is the local storage field name where we store the user theme
     // We set the theme per user, in the browser's local storage
@@ -60,14 +91,13 @@ $(function() {
     // Generate a pseudo user id
     // This will be used to know if it's me the one who updated
     // the code or not
-    var uid = Math.random().toString();
-    var editor = null;
+    editor = null;
 
     // Write the entries in the database 
     editorValues = db.ref("editor_values");
 
     // Get the current editor reference
-    var currentEditorValue = editorValues.child(editorId);
+    currentEditorValue = editorValues.child(editorId);
 
     // Store the current timestamp (when we opened the page)
     // It's quite useful to know that since we will
@@ -94,12 +124,12 @@ $(function() {
         editor.$blockScrolling = Infinity;
 
         // Get the queue reference
-        var queueRef = currentEditorValue.child("queue");
+        queueRef = currentEditorValue.child("queue");
 
         // This boolean is going to be true only when the value is being set programmatically
         // We don't want to end with an infinite cycle, since ACE editor triggers the
         // `change` event on programmatic changes (which, in fact, is a good thing)
-        var applyingDeltas = false;
+        applyingDeltas = false;
 
         // When we change something in the editor, update the value in Firebase
         editor.on("change", function(e) {
@@ -109,36 +139,29 @@ $(function() {
             if (applyingDeltas) {
                 return;
             }
-
             // Set the content in the editor object
             // This is being used for new users, not for already-joined users.
-            if (editorId != "PUBLIC") {
-                currentEditorValue.update({
-                    content: editor.getValue()
-                });
-            }
-
+            currentEditorValue.update({
+                content: editor.getValue()
+            });
             // Generate an id for the event in this format:
             //  <timestamp>:<random>
             // We use a random thingy just in case somebody is saving something EXACTLY
             // in the same moment
-            if (editorId != "PUBLIC") {
-                queueRef.child(Date.now().toString() + ":" + Math.random().toString().slice(2)).set({
-                    event: e,
-                    by: uid
-                }).catch(function(e) {
-                    console.error(e);
-                });
-            }
+            queueRef.child(Date.now().toString() + ":" + Math.random().toString().slice(2)).set({
+                event: e,
+                by: uid
+            }).catch(function(e) {
+                console.error(e);
+            });
         });
 
         // Get the editor document object 
 
-        var doc = editor.getSession().getDocument();
+        doc = editor.getSession().getDocument();
 
         // Listen for updates in the queue
         queueRef.on("child_added", function(ref) {
-
             // Get the timestamp
             var timestamp = ref.key.split(":")[0];
 
@@ -172,53 +195,20 @@ $(function() {
         if (val === null) {
             // ...we will initialize a new one. 
             // ...with this content:
-            val = "/* Welcome to 404Editor v1.2.2! */\r\n/* Be sure to check your workspace key under \'Preferences,\' you will need it in order to rejoin this workspace in the future. */";
-            //...and a random key
-            editorKey = keygen();
+            val = "/* Welcome to 404Editor v2.0.0! */";
 
             // Here's where we set the initial content of the editor
             editorValues.child(editorId).set({
                 lang: "javascript",
                 queue: {},
-                content: val,
-                key: editorKey
+                content: val
             });
-
-            //Redirect to the editor's page
-            location.href = "https://editor.the404.nl/?id=" + editorId + "&key=" + editorKey
-                //If we're not on the public workspace, show the key in the input box where the user can change it.
-                //This box is removed when viewing the public workspace
-            if (editorId != "PUBLIC") {
-                document.getElementById("keyChangeInput").value = sanitize(editorKey);
-            }
-        } else { //There is an editor with that name.
-            //Are we trying to join an existing one or make a new one?
-            if (!makeNew) {
-                //We're trying to join, so we grab the real key for that editor
-                var keyLocation = db.ref("editor_values").child(editorId).child("key");
-                keyLocation.on("value", function(getKey) {
-                    //Check if the inputted key does not match the real one
-                    if (editorKey != getKey.val()) {
-                        //Make sure we're not incorrectly assuming an incorrect key, after a key change or deleting the editor, for instance.        
-                        if (editorId != "PUBLIC" && !keyChanged && !deleted) {
-                            document.getElementById("editor").remove(); //Remove the editor object, so the content can't be viewed before the redirect.
-                            alert("Incorrect key!"); //Oopsies
-                            location.href = "https://editor.the404.nl/"; //Return to the default page 
-                        }
-                    }
-                });
-            } else {
-                //We're trying to make a new one but the name is already taken
-                document.getElementById("editor").remove(); //Remove the editor object, so the content can't be viewed before the redirect.
-                alert("That name is already in use. Please choose another."); //Too bad
-                location.href = "https://editor.the404.nl/"; //Return to the default page
-            }
         }
         // We're going to update the content, so let's turn on applyingDeltas 
         applyingDeltas = true;
 
         // ...then set the value
-        // -1 will move the cursor at the begining of the editor, preventing
+        // -1 will move the cursor at the beginning of the editor, preventing
         // selecting all the code in the editor (which is happening by default)
         editor.setValue(val, -1);
 
@@ -231,71 +221,61 @@ $(function() {
         $("#editor").fadeIn();
         $("#buttons").fadeIn();
         $("#header").fadeIn();
-
-        //We display the editor key in the input field where the user can change it, unless we're on the public workspace where that box is removed
-        if (editorId != "PUBLIC") {
-            document.getElementById("keyChangeInput").value = sanitize(editorKey);
-        }
+        $("#nav-open").fadeIn();
+        $("#join-close").show();
 
         // And finally, focus the editor!       
         editor.focus();
+        return;
     });
-});
+}
+
 
 /*Function to delete an existing workspace*/
-function delWork() {
-    //Gotta check if they're trying to meme on me and delete the public workspace. 
-    //The delete button is removed when you're on the public workspace, but we gotta be careful
-    if (editorId == "PUBLIC") {
-        alert("You can't delete this workspace!");
-    } else {
-        //Double check they understand what the trash can symbol means
-        if (confirm("Are you sure you want to delete this workspace?\n\nThis cannot be undone.")) {
-            deleted = true; //Flag the updater code to not update
-            location.href = "https://editor.the404.nl/"; //Send the user to the default page
-            editorValues.child(editorId).remove(); //Remove the editor
-        }
+var deleteWorkspace = function() {
+    //Double check they understand what the trash can symbol means
+    if (confirm("Are you sure you want to delete this workspace?\n\nThis cannot be undone.")) {
+        editorValues.child(editorId).remove(); //Remove the editor
+        location.reload();
     }
 }
 
 /*Function to download a workspace*/
-function download() {
-    /*Save function
-    	Data = file contents
-    	filename = the name, dipshit
-    	type = the extension*/
-    function save(data, filename, type) {
-        var file = new Blob([data], { type: type }); //New file variable (blob?) with the contents and type
-        if (window.navigator.msSaveOrOpenBlob) // IE10+
-            window.navigator.msSaveOrOpenBlob(file, filename);
-        else { // Others
-            var a = document.createElement("a"); //Creating an a element
-            var url = URL.createObjectURL(file); //Get url to our newly made file
-            a.href = url; //Set that as the href of our a tag
-            a.download = filename; //Set the download property to our filename
-            document.body.appendChild(a); //Add the a tag to the page
-            a.click(); //Click it
-            setTimeout(function() {
-                document.body.removeChild(a); //Remove it
-                window.URL.revokeObjectURL(url); //Get rid of the url to our file
-            }, 0);
-        }
-    }
-    /*Function to determine the language, and therefore the correct file extension*/
-    function determineLang() {
-        /*Function to determine the selected option in a <select> element. Takes the element as a parameter.*/
-        function getSelectedOption(sel) {
-            var opt; //To hold the option
-            //For loop to go through each option in the select tag
-            for (var i = 0, len = sel.options.length; i < len; i++) {
-                opt = sel.options[i]; //Get option
-                if (opt.selected === true) { //Check it its the selected one
-                    break; //found it
-                }
+var downloadWorkspace = function() {
+
+    var save = function(data, filename, type) {
+            var file = new Blob([data], { type: type }); //New file variable (blob?) with the contents and type
+            if (window.navigator.msSaveOrOpenBlob) // IE10+
+                window.navigator.msSaveOrOpenBlob(file, filename);
+            else { // Others
+                var a = document.createElement("a"); //Creating an a element
+                var url = URL.createObjectURL(file); //Get url to our newly made file
+                a.href = url; //Set that as the href of our a tag
+                a.download = filename; //Set the download property to our filename
+                document.body.appendChild(a); //Add the a tag to the page
+                a.click(); //Click it
+                setTimeout(function() {
+                    document.body.removeChild(a); //Remove it
+                    window.URL.revokeObjectURL(url); //Get rid of the url to our file
+                }, 0);
             }
-            return opt; //return the correct option
         }
-        //Return the id of the selected option
+        /*Function to determine the language, and therefore the correct file extension*/
+
+    var determineLang = function() {
+        /*Function to determine the selected option in a <select> element. Takes the element as a parameter.*/
+        var getSelectedOption = function(sel) {
+                var opt; //To hold the option
+                //For loop to go through each option in the select tag
+                for (var i = 0, len = sel.options.length; i < len; i++) {
+                    opt = sel.options[i]; //Get option
+                    if (opt.selected === true) { //Check it its the selected one
+                        break; //found it
+                    }
+                }
+                return opt; //return the correct option
+            }
+            //Return the id of the selected option
         return getSelectedOption(document.getElementById("select-lang")).id;
         //I painstakingly made the ids of each option correspond to the proper file extension (C# has id '.cs', etc)
     }
@@ -309,37 +289,13 @@ function download() {
     save(text, fullname, "txt"); //Save the file with our save function. Type is plain text, since that's all these kind of files are
 }
 
-/*Function to generate a random key for a workspace*/
-function keygen() {
-    alert("oh fuck");
-    var text = ""; //Empty string to hold our constructed key
-    var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"; //All possible chars for the key
-    for (var i = 0; i < 20; i++) //Max 20 chars to a key
-        text += possible.charAt(Math.floor(Math.random() * possible.length)); //Add a random character from the possible chars to our string
-    return text; //Return our fully constructed key
-}
-
-/*Function to change the key to something new*/
-function updateKey() {
-    var newKey = document.getElementById("keyChangeInput").value; //Get whatever the user chose as their new key
-    if (editorId != "PUBLIC") {
-        keyChanged = true; //Flag to the update code that we're changing the key	    
-        db.ref("editor_values").child(editorId).update({ //Update the key in the database
-            key: newKey
-        });
-        alert("Key successfully changed!"); //Message
-        keyChanged = false; //Unset our flag
-        location.href = "http://editor.the404.nl/?id=" + editorId + "&key=" + newKey; //Redirect them to the "new" workspace
-    } else {
-        alert("No.");
-    }
-}
-
-function sanitize(str) {
+var sanitize = function(str) {
+    //strip all html from string
     return str.replace(/(<([^>]+)>)/ig, "");
 }
 
-function stalinSort(arr) {
+var stalinSort = function(arr) {
+    // why is this here?
     arr2 = [];
     min = arr[0];
     for (var i = 0; i <= arr.length - 1; i++) {
@@ -349,4 +305,12 @@ function stalinSort(arr) {
         }
     }
     return arr2;
+}
+
+function openNav() {
+    document.getElementById("navbox").style.width = "250px";
+}
+
+function closeNav() {
+    document.getElementById("navbox").style.width = "0";
 }
