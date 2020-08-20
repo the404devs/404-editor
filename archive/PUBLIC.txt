@@ -1,0 +1,19 @@
+/* Welcome to 404Editor v1.2.2! */
+/* Use the buttons to the left to join or create a workspace! */
+
+/* New in v1.2.2 (08/14/20): 
+    * Changed links from the404.nl/editor to editor.the404.nl so that this thing works again. 
+    * Not sure why anyone would want to use this though. */
+
+/* New in v1.2.1 (11/21/18): 
+    * Ability to choose a new random key 
+    * Code documented (woohoo) 
+    * Removed various inefficiencies 
+    * Changed editor font style to better suit my own personal preference */
+
+/* New in v1.2 (11/20/18): 
+    * Separate buttons and popups for joining/creating workspaces
+    * New workspaces now generate with a random key, which is required when joining a workspace* 
+    This key can be found and changed in the \'Preferences\' section of your workspace
+    * Share this key with those who will need access to your workspace
+    * Various under-the-hood updates */

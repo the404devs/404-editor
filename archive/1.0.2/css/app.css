@@ -1,0 +1,262 @@
+* {
+  box-sizing: border-box;
+}
+@font-face{
+  font-family: "camaraderie";
+  src: url("../../css/Camaraderie.otf");
+}
+@font-face{
+  font-family: "roboto";
+  src: url("Roboto-Medium.ttf");
+}
+
+body{
+  background-color: black;
+  margin: 0;
+}
+
+#header{
+  top: 0;
+  position: fixed;
+  height: 50px;
+  width: 100%;
+  background-color: black;
+  display: none;
+  z-index: 10000001
+}
+
+#editor {
+  position: absolute;
+  padding-top: 50px;
+  top: 50px;
+  right: 0;
+  left: 75px;
+  display: none;
+  height: 95%;
+  z-index: 10000000;
+}
+
+#workspaceName{
+  position: absolute;
+  padding-top: 10px;
+  padding-left: 80px;
+  color: white;
+  font-family: "camaraderie";
+  font-size: 30px;
+  margin-bottom: 10px;
+  text-shadow: none;
+}
+
+#buttons{
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  width: 75px;
+  background-color: black;
+  display: inline-block;
+  text-align: left;
+  padding-left: 10px;
+  z-index: 10000002
+}
+
+.controls {
+  position: absolute;
+  top: 1%;
+  right: 1%;
+  z-index: 1;
+  font-family: "roboto";
+  width: 15%;
+  text-align: right;
+}
+
+.select-input{
+  height: 20px;
+  color: white;
+  border-radius: 5px;
+  border: 2px solid #06e0d0;
+  background-color: black;
+  width: 100%;
+  margin-top: 2px;
+}
+
+#input{
+  height: 40px;
+  color: white;
+  border-radius: 5px;
+  border: 2px solid #06e0d0;
+  background-color: black;
+  display:inline-block;
+  margin-bottom: 10px;
+  margin-top: 10px;
+  margin-right: 0px;
+  width: 90%;
+}
+
+#loader {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  z-index: 11;
+  width: 150px;
+  height: 150px;
+  margin: -75px 0 0 -75px;
+  border: 16px solid #154349;
+  border-radius: 50%;
+  border-top: 16px solid #06e0d0;
+  width: 80px;
+  height: 80px;
+  -webkit-animation: spin 2s linear infinite;
+  animation: spin 2s linear infinite;
+}
+
+@-webkit-keyframes spin {
+  0% { -webkit-transform: rotate(0deg); }
+  100% { -webkit-transform: rotate(360deg); }
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+
+h2 {
+  text-align: center;
+  font-family: 'camaraderie';
+  font-size: 50px;
+  margin-top: 85px;
+  color: white;
+}
+
+/* Style the side navigation */
+.sidenav {
+  height: 100%;
+  width: 0px;
+  position: fixed;
+  z-index: 10000002;
+  top: 0;
+  left: 0;
+  background-color: #111;
+  overflow-x: hidden;
+  transition: 0.5s;
+  padding-top: 60px;
+  font-family: "Segoe UI";
+}
+
+
+
+/* Side navigation links */
+.sidenav a {
+  color: white;
+  padding: 16px;
+  text-decoration: none;
+  display: block;
+}
+.sidenav p {
+  color: white;
+  padding: 16px;
+  text-decoration: none;
+  display: block;
+}
+
+/* Change color on hover */
+.sidenav a:hover {
+  color: black;
+  background-color:#06e0d0;
+  transition: 0.5s;
+  border-radius: 50px;
+}
+
+.sidenav .closebtn {
+  position: absolute;
+  top: 0px;
+  right: 0px;
+  font-size: 25px;
+  margin-left: 0px;
+  padding-top: 7px;
+  height: 50px;
+  width: 50px;
+}
+
+.navOpen{
+  color: white;
+  position: fixed;
+  width: 50px;
+  height: 50px;
+  padding-top: 5px;
+  padding-right: 5px;
+  padding-left: 5px;
+  text-align: center;
+}
+
+.navOpen:hover{
+  color: black;
+  background-color:#06e0d0;
+  transition: 0.5s;
+  border-radius: 50px;
+}
+
+.navButton{
+  color: white;
+  position: fixed;
+  width: 50px;
+  height: 50px;
+  padding-top: 5px;
+  padding-right: 5px;
+  padding-left: 5px;
+  text-align: center;  
+}
+
+.navButton:hover{
+  color: black;
+  background-color:#06e0d0;
+  transition: 0.5s;
+  border-radius: 50px;
+}
+
+.popup{
+  visibility: hidden;
+  width: 150px;
+  background-color: #555;
+  color: #fff;
+  text-align: center;
+  border-radius: 6px;
+  padding: 5px 0;
+  margin-left: 55px;
+  margin-top: 10px;
+  position: absolute;
+  z-index: 10000000;
+  font-family: roboto;
+  font-size: 12px;
+  opacity: 0;
+}
+#popcan1:hover .popup{
+  transition: 0.5s;
+  visibility: visible;
+  opacity: 1;
+}
+
+#popcan2:hover .popup{
+  transition: 0.5s;
+  visibility: visible;
+  opacity: 1;
+}
+
+#popcan3:hover .popup{
+  transition: 0.5s;
+  visibility: visible;
+  opacity: 1;
+}
+
+.dropdown-container {
+  background-color: #222;
+  text-indent: 8px;
+
+  height: 0px;
+  width: 250px;
+  z-index: 1;
+  
+  overflow-y: hidden;
+  transition: 0.5s;
+}

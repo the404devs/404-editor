@@ -3,11 +3,11 @@
 }
 @font-face{
   font-family: "camaraderie";
-  src: url("Camaraderie.otf");
+  src: url("../../css/Camaraderie.otf");
 }
 @font-face{
   font-family: "roboto";
-  src: url("Roboto-Regular.ttf");
+  src: url("../../css/Roboto-Regular.ttf");
 }
 
 @font-face{

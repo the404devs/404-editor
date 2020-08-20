@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html>
+    <head>
+      <meta http-equiv="content-type" content="text/html; charset=utf-8">
+      <title>404Editor</title>
+      <link rel="stylesheet" href="css/app.css" type="text/css" media="screen" charset="utf-8">
+      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+      <link rel="shortcut icon" type="image/x-icon" href="../images/favicon.ico"> 
+    </head>
+    <body>
+    	<h2 id="welcome">Welcome to 404Editor!</h2>
+    	<div id="header">
+		    <div id="workspaceName">
+		    	Workspace: 
+		    </div> 
+
+	  		<div class="controls">    
+	       		<!-- <form>
+	          		<input id="input" name="id" placeholder="Type name to join workspace">
+	       		</form>  -->
+	    
+	      		<select id="select-theme" class="select-input">
+	    			<optgroup label="Bright">
+				        <option value="ace/theme/chrome">Chrome</option>
+				        <option value="ace/theme/clouds">Clouds</option>
+				        <option value="ace/theme/crimson_editor">Crimson Editor</option>
+				        <option value="ace/theme/dawn">Dawn</option>
+				        <option value="ace/theme/dreamweaver">Dreamweaver</option>
+				        <option value="ace/theme/eclipse">Eclipse</option>
+				        <option value="ace/theme/github">GitHub</option>
+				        <option value="ace/theme/iplastic">IPlastic</option>
+				        <option value="ace/theme/solarized_light">Solarized Light</option>
+				        <option value="ace/theme/textmate">TextMate</option>
+				        <option value="ace/theme/tomorrow">Tomorrow</option>
+				        <option value="ace/theme/xcode">XCode</option>
+				        <option value="ace/theme/kuroir">Kuroir</option>
+				        <option value="ace/theme/katzenmilch">KatzenMilch</option>
+				        <option value="ace/theme/sqlserver">SQL Server</option>
+	    			</optgroup>
+	    			<optgroup label="Dark">
+				        <option value="ace/theme/ambiance">Ambiance</option>
+				        <option value="ace/theme/chaos">Chaos</option>
+				        <option value="ace/theme/clouds_midnight">Clouds Midnight</option>
+				        <option value="ace/theme/cobalt">Cobalt</option>
+				        <option value="ace/theme/gruvbox">Gruvbox</option>
+				        <option value="ace/theme/idle_fingers">idle Fingers</option>
+				        <option value="ace/theme/kr_theme">krTheme</option>
+				        <option value="ace/theme/merbivore">Merbivore</option>
+				        <option value="ace/theme/merbivore_soft">Merbivore Soft</option>
+				        <option value="ace/theme/mono_industrial">Mono Industrial</option>
+				        <option value="ace/theme/monokai">Monokai</option>
+				        <option value="ace/theme/pastel_on_dark">Pastel on dark</option>
+				        <option value="ace/theme/solarized_dark">Solarized Dark</option>
+				        <option value="ace/theme/terminal">Terminal</option>
+				        <option value="ace/theme/tomorrow_night">Tomorrow Night</option>
+				        <option value="ace/theme/tomorrow_night_blue">Tomorrow Night Blue</option>
+				        <option value="ace/theme/tomorrow_night_bright">Tomorrow Night Bright</option>
+				        <option value="ace/theme/tomorrow_night_eighties">Tomorrow Night 80s</option>
+				        <option value="ace/theme/twilight">Twilight</option>
+				        <option value="ace/theme/vibrant_ink">Vibrant Ink</option>
+	    			</optgroup>
+	      		</select>
+	      		<select id="select-lang" class="select-input">
+				    <option value="batchfile">BatchFile</option>
+				    <option value="c_cpp">C and C++</option>
+				    <option value="csharp">C#</option>
+				    <option value="css">CSS</option>
+				    <option value="html">HTML</option>
+				    <option value="ini">INI</option>
+				    <option value="java">Java</option>
+				    <option value="javascript">JavaScript</option>
+				    <option value="json">JSON</option>
+				    <option value="lua">Lua</option>
+				    <option value="php">PHP</option>
+				    <option value="python">Python</option>
+				    <option value="text">Text</option>
+				    <option value="vbscript">VBScript</option>
+				    <option value="xml">XML</option>
+	      		</select>
+	  		</div>
+	  	</div>
+        
+        <div id="editor"></div>
+        <div id="loader"></div>   
+	    <div id="buttons">
+	        <span class="navOpen" style="font-size:30px;cursor:pointer"  onclick="openNav()">&#9776;</span>  
+	        <br> 
+	        <br> 
+	        <br> 
+	        <br> 
+	        <div id="popcan1" onmouseenter="document.getElementById('popup1').style.visibility = 'visible';" onmouseleave="document.getElementById('popup1').style.visibility = 'hidden'">
+	        	<span class="navButton" style="font-size:30px;cursor:pointer;" onclick="openList()" ><i class="fa fa-sign-in"></i></span> 
+	        	<span class="popup" id="popup1">Show active workspaces</span>
+	        </div>
+	        
+	        
+	        <br> 
+	        <br> 
+	        <br> 
+	        <br> 
+	        <div id="popcan2" onmouseenter="document.getElementById('popup2').style.visibility = 'visible';" onmouseleave="document.getElementById('popup2').style.visibility = 'hidden'">
+	        	<span class="navButton" style="font-size:30px;cursor:pointer;" onclick="download()"><i class="fa fa-download"></i></span> 
+	        	<span class="popup" id="popup2">Download current file</span>
+	        </div>
+	        
+	        <br> 
+	        <br> 
+	        <br> 
+	        <br> 
+	        <div id="popcan3" onmouseenter="document.getElementById('popup3').style.visibility = 'visible';" onmouseleave="document.getElementById('popup3').style.visibility = 'hidden'">
+	        	<span class="navButton" style="font-size:30px;cursor:pointer;" onclick="delWork()"><i class="fa fa-trash"></i></span> 
+	        	<span class="popup" id="popup3">Delete current workspace</span>
+	        </div>
+	        
+	    </div>
+
+	    <div id="workspaceList" class="sidenav">
+	    	<a href="javascript:void(0)" class="closebtn" onclick="closeList()">&times;</a> 
+
+	    	<a href="javascript:void(0)" id="dropper" onclick="showCreate()">Create/Join Workspace <i class="fa fa-chevron-down"></i></a>	
+	    	<div class="dropdown-container" id="createbox">
+	    		<form>
+	          		<input id="input" name="id" placeholder="Type name to join workspace">
+	       		</form> 
+  			</div>
+  			<hr>
+  			<p>Active Workspaces:</p>
+	    </div>
+        
+
+	    <div id="navbox" class="sidenav">
+	        <a href="javascript:void(0)" class="closebtn" onclick="closeNav()">&times;</a>          
+	        <a href="../index.html">🏠 Home</a>
+	    
+	        <a href="../software.html">⇓ Software</a>
+
+	        <a href="../editor">404Editor</a>
+	        
+	        <a href="../development">Fun Stuff!</a>
+	        
+	        <a href="http://www.sdsscomputers.com/OwenGoodwin/index.html">ICS Site</a>
+	        
+	        <a href="../ip.php">IP Tool</a>
+
+	        <a href="../contact.html">Contact</a>
+	        
+	        <a href="../about.html">About</a>          
+	    </div>
+
+  		<script src="https://www.gstatic.com/firebasejs/3.6.4/firebase.js"></script>
+  		<script>
+	      // Initialize Firebase
+	      var config = {
+	        apiKey: "AIzaSyB4NTU1ziKd7YcrNzpPZSKU6ZKyJwX81zI",
+	        authDomain: "editor-8a0f1.firebaseapp.com",
+	        databaseURL: "https://editor-8a0f1.firebaseio.com",
+	        projectId: "editor-8a0f1",
+	        storageBucket: "editor-8a0f1.appspot.com",
+	        messagingSenderId: "215947375655"
+	      };
+	      firebase.initializeApp(config);
+	    </script>
+  		<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+  		<script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.2.6/ace.js" type="text/javascript" charset="utf-8"></script>
+  		<script src="https://cdnjs.cloudflare.com/ajax/libs/urljs/2.3.1/url.min.js"></script>
+  		<script type="text/javascript" src="js/app.js"></script>
+  		<script type="text/javascript" src="../js/nav.js"></script>
+    </body>
+</html>

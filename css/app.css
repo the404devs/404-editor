@@ -1,7 +1,7 @@
 :root {
     --foreground: #ffffff;
     --background: #151824;
-    --background-transparent: rgba(21, 24, 36, 0.25);
+    --background-transparent: rgba(21, 24, 36, 0.35);
     --accent: #b20acb;
     --highlight: #800080;
     --highlight-transparent: rgba(128, 0, 128, 0.8);
@@ -256,6 +256,7 @@ body {
     color: white;
     font-family: "Gilroy";
     font-size: 14px;
+    /* height: 40px; */
 }
 
 .button {
@@ -325,22 +326,6 @@ body {
     color: var(--text-dark);
 }
 
-#nav-open i {
-    font-size: 20px;
-    padding: 0;
-    vertical-align: 3px;
-}
-
-.sidenav i {
-    font-size: 20px;
-    width: 24px;
-    padding-right: 5px;
-}
-
-.fas.fa-times {
-    vertical-align: -1px!important;
-}
-
 .sidenav {
     height: 100%;
     width: 0px;
@@ -375,6 +360,25 @@ body {
     border-radius: 50px;
 }
 
+.sidenav p {
+    color: white;
+    padding: 16px;
+    display: block;
+    width: 200px;
+    margin-left: 5px;
+}
+
+.sidenav i {
+    font-size: 20px;
+    width: 24px;
+    padding-right: 5px;
+}
+
+.fas.fa-times {
+    vertical-align: -1px!important;
+    transform: translateX(4px);
+}
+
 #nav-open {
     color: white;
     position: fixed;
@@ -391,6 +395,12 @@ body {
     background-color: #06e0d0;
     transition: 0.5s;
     border-radius: 50px;
+}
+
+#nav-open i {
+    font-size: 20px;
+    padding: 0;
+    vertical-align: 3px;
 }
 
 select {
