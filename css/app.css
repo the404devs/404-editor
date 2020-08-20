@@ -81,12 +81,28 @@ body {
     margin-bottom: 10px;
     text-shadow: none;
     overflow-x: hidden;
+    left: 0;
 }
 
 #workspace-name b {
     font-weight: bold;
     font-family: "Camaraderie";
     vertical-align: -1px;
+}
+
+#logo {
+    position: absolute;
+    padding-top: 10px;
+    padding-right: 80px;
+    color: white;
+    font-family: "Gilroy Light";
+    font-size: 1.9em;
+    margin-bottom: 10px;
+    text-shadow: none;
+    vertical-align: -1px;
+    font-family: "Camaraderie";
+    right: 0;
+    overflow-x: hidden;
 }
 
 .input {
