@@ -24,6 +24,7 @@ https://editor.the404.nl
 - Password system removed. The code for that physically hurt to look at.
     - Might make a new password system in the future.
 - Code cleaned up a whole lot. Still needs work.
+- Name changed to "404-Editor" from "404Editor"
 
 ### *1.2.2 (08/14/20)*
 ----------------------
