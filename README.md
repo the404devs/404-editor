@@ -16,7 +16,7 @@ https://editor.the404.nl
 - 1.2.1
 - 1.2.2
 
-### ^2.0.1 (11/02/20)^
+### *2.0.1 (11/02/20)*
 ----------------------
 - Change my name to reflect the one I'm currently using.
 
