@@ -195,7 +195,7 @@ var init = function(id) {
         if (val === null) {
             // ...we will initialize a new one. 
             // ...with this content:
-            val = "/* Welcome to 404Editor v2.0.0! */";
+            val = "/* Welcome to 404Editor v2.0.1! */";
 
             // Here's where we set the initial content of the editor
             editorValues.child(editorId).set({
