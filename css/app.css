@@ -39,6 +39,11 @@
     src: url("Inconsolata-Regular.ttf");
 }
 
+@font-face {
+    font-family: "Raleway";
+    src: url("Raleway-Regular.ttf");
+}
+
 .ace_print-margin {
     visibility: hidden !important;
 }

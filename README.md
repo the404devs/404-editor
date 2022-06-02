@@ -16,6 +16,10 @@ https://editor.the404.nl
 - 1.2.1
 - 1.2.2
 
+### *2.0.2 (06/02/2022)*
+------------------------
+- Fixed missing font
+
 ### *2.0.1 (11/02/2020)*
 ------------------------
 - Change my name to reflect the one I'm currently using.
