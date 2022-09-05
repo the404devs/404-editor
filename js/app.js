@@ -333,11 +333,13 @@ var downloadWorkspace = function() {
         //I painstakingly made the ids of each option correspond to the proper file extension (C# has id '.cs', etc)
     }
 
-    var text = ""; //This string will hold the contents of our file
-    //Go through each line of the editor, which are separate entities
-    $('.ace_line').each(function() {
-        text += $(this).text() + "\r\n"; //Add the text from that line to our string, and append a newline at the end
-    });
+    // var text = ""; //This string will hold the contents of our file
+    // //Go through each line of the editor, which are separate entities
+    // $('.ace_line').each(function() {
+    //     text += $(this).text() + "\r\n"; //Add the text from that line to our string, and append a newline at the end
+    // });
+
+    let text = editor.getValue();
     var fullname = editorId + determineLang(); //Construct the complete filename from the name of the editor and the file extension
     save(text, fullname, "txt"); //Save the file with our save function. Type is plain text, since that's all these kind of files are
 }
