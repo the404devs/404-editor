@@ -65,14 +65,15 @@ body {
 
 #editor {
     position: absolute;
-    top: 3.3em;
+    /* top: 3.3em; */
+    top: 50px;
     right: 0;
     left: 0;
     display: none;
-    height: calc(100% - 3.3em - 2px);
+    height: calc(100% - 52px);
     z-index: 10000000;
     border-top: 2px solid white;
-    font-size: 0.9em !important;
+    /* font-size: 0.9em !important; */
     font-family: "Inconsolata" !important;
 }
 
@@ -422,7 +423,7 @@ body {
 #nav-open i {
     font-size: 20px;
     padding: 0;
-    vertical-align: 3px;
+    vertical-align: 1px;
 }
 
 select {
@@ -431,4 +432,9 @@ select {
 
 #join-close {
     display: none;
+}
+
+label {
+    display: inline-block;
+    width: 155px;
 }

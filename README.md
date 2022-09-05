@@ -16,6 +16,13 @@ https://editor.the404.nl
 - 1.2.1
 - 1.2.2
 
+### *2.0.3 (09/05/2022)*
+------------------------
+- Font size is configurable
+- Bump Ace to 1.10.0
+- Bug fixes
+    - Checks for invalid characters in workspace id
+
 ### *2.0.2 (06/02/2022)*
 ------------------------
 - Fixed missing font

@@ -6,8 +6,8 @@
     <link rel="stylesheet" href="css/app.css" type="text/css" media="screen" charset="utf-8">
     <script src="https://kit.fontawesome.com/a79a931136.js" crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
-<!--     <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.2.6/ace.js"></script> -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.6.0/ace.js"></script>
+    <!--     <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.2.6/ace.js"></script> -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.10.0/ace.js"></script>
     <script src="https://www.gstatic.com/firebasejs/7.18.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/7.18.0/firebase-database.js"></script>
 </head>
@@ -32,9 +32,13 @@
         <a onclick="downloadWorkspace()"><i class="fas fa-download"></i> Download</a>
         <a onclick="deleteWorkspace()"><i class="fas fa-trash"></i> Delete Workspace</a>
         <a onclick="$('#pref-modal').show()"><i class="fas fa-cog"></i> Preferences</a>
-        <a href="https://github.com/the404devs/404-editor"><i class="fab fa-github"></i> Git Repo</a>
+        <a href="https://github.com/the404devs/404-editor"><i class="fab fa-github"></i> Source (GitHub)</a>
         <br>
-        <p>404-Editor<br>v2.0.2 (06/02/2022)<br>Owen Bowden</p>
+        <p>
+            404-Editor
+            <br> v2.0.3 (09/05/2022)
+            <br> Owen Bowden
+        </p>
     </div>
 
     <div id="join-modal" class="modal">
@@ -61,7 +65,7 @@
                 <span class="close" onclick="$('#pref-modal').fadeOut()">×</span>
                 <h3>Editor Preferences</h3>
             </div>
-            <div class="modal-body" style="max-height: 400px;">
+            <div class="modal-body" style="max-height: 400px; text-align: left;">
                 <!-- overflow-y:scroll ^^ -->
                 <div>
                     <label>Editor Theme: </label>
@@ -127,6 +131,9 @@
                         <option value="vbscript" id=".vbs">VBScript</option>
                         <option value="xml" id=".xml">XML</option>
 			      	</select>
+                    <br>
+                    <label>Editor Font Size (px): </label>
+                    <input id="font-size" class="input" type="number" style="width:50px">
                 </div>
             </div>
             <div class="modal-footer">
@@ -135,6 +142,7 @@
         </div>
     </div>
     <script src="js/app.js"></script>
+    <!-- <script src="js/app2.js"></script> -->
 
 </body>
 

@@ -20,13 +20,16 @@ var applyingDeltas = false;
 var currentEditorValue = null;
 var queueRef = null;
 var uid = Math.random().toString();
+var currentFileID = null;
 
 $('#id-input').keypress(function(e) { if (e.keyCode == 13) { join(); } });
 
 var join = function() {
     var id = sanitize($("#id-input").val());
-    if (id === "" || id === null) {
+    var re = /[#$.\[\]]+/g;
+    if (id.trim() === "" || id === null || id.match(re)) {
         console.log("bad");
+        alert("Please use only alphanumeric characters in the workspace name!\n\nThe following characters cannot be used:\n $  #  .  [  ]");
         return;
     }
     $("#join-modal").fadeOut();
@@ -37,6 +40,9 @@ var join = function() {
 
 var init = function(id) {
     editorId = id; //set editor id
+    console.log("editor id is " + editorId)
+        // console.log()
+        // var fileRef = db.ref("editor_values/" + editorId + "/files");
 
     //reset event listeners
     if (currentEditorValue) {
@@ -56,12 +62,18 @@ var init = function(id) {
 
     // This is the local storage field name where we store the user theme
     // We set the theme per user, in the browser's local storage
-    var LS_THEME_KEY = "editor-theme";
+    let LS_THEME_KEY = "editor-theme";
+    let EDITOR_FONT_SIZE = "editor-font-size"
 
     // This function will return the user theme or the Tomorrow theme (which
     // is the default)
     function getTheme() {
         return localStorage.getItem(LS_THEME_KEY) || "ace/theme/tomorrow_night";
+    }
+
+    //Function to get preferred font size
+    function getFontSize() {
+        return localStorage.getItem(EDITOR_FONT_SIZE) || 12;
     }
 
     // Select the desired theme of the editor
@@ -76,6 +88,15 @@ var init = function(id) {
             localStorage.setItem(LS_THEME_KEY, this.value);
         } catch (e) {}
     }).val(getTheme());
+
+    $("#font-size").change(function() {
+        // Update font size
+        $("#editor").css("font-size", this.value + "px");
+
+        try {
+            localStorage.setItem(EDITOR_FONT_SIZE, this.value);
+        } catch (e) {}
+    }).val(getFontSize());
 
     // Select the desired programming language you want to code in 
     var $selectLang = $("#select-lang").change(function() {
@@ -99,14 +120,29 @@ var init = function(id) {
     // Get the current editor reference
     currentEditorValue = editorValues.child(editorId);
 
+    // console.log(currentEditorValue.child("files").child("1633719398985:08581516502984317")).get();
+    // var keys = Object.keys(currentEditorValue.child("files"))
+    // var allFilesInWorkspace = [];
+    // fileRef.on("value", function(snapshot) {
+    //     const data = snapshot.val() || null;
+    //     if (data) {
+    //         allFilesInWorkspace = Object.keys(snapshot.val());
+    //         currentFileID = allFilesInWorkspace[0];
+    //     }
+    // });
+
+
     // Store the current timestamp (when we opened the page)
     // It's quite useful to know that since we will
     // apply the changes in the future only
     var openPageTimestamp = Date.now();
     // Take the editor value on start and set it in the editor
-    currentEditorValue.child("content").once("value", function(contentRef) {
 
+    console.log(currentEditorValue.child("files"))
+        // fileRef.child(currentFileID).child("content").once("value", function(contentRef) {
+    currentEditorValue.child("content").once("value", function(contentRef) {
         // Somebody changed the lang. Hey, we have to update it in our editor too!
+        // currentEditorValue.child("files").child(currentFileID).child("lang").on("value", function(r) {
         currentEditorValue.child("lang").on("value", function(r) {
             var value = r.val();
             // Set the language
@@ -122,9 +158,13 @@ var init = function(id) {
         editor = ace.edit("editor");
         editor.setTheme(getTheme());
         editor.$blockScrolling = Infinity;
+        $("#editor").css("font-size", getFontSize() + "px");
+
+
 
         // Get the queue reference
         queueRef = currentEditorValue.child("queue");
+        // queueRef = currentEditorValue.child("files").child(currentFileID).child("queue");
 
         // This boolean is going to be true only when the value is being set programmatically
         // We don't want to end with an infinite cycle, since ACE editor triggers the
@@ -172,6 +212,7 @@ var init = function(id) {
 
             // Get the snapshot value
             var value = ref.val();
+            // console.log(value.by);
 
             // In case it's me who changed the value, I am
             // not interested to see twice what I'm writing.
@@ -196,10 +237,22 @@ var init = function(id) {
             // ...we will initialize a new one. 
             // ...with this content:
             val = "/* Welcome to 404Editor v2.0.2! */";
+            var defaultID = Date.now().toString() + ":" + Math.random().toString().replace(".", "");
+            // currentFileID = defaultID;
 
             // Here's where we set the initial content of the editor
+            // editorValues.child(editorId).set({
+            //     files: {
+            //         [defaultID]: {
+            //             name: "Untitled",
+            //             content: "",
+            //             lang: "javascript",
+            //             queue: {},
+            //         }
+            //     }
+            // });
             editorValues.child(editorId).set({
-                lang: "javascript",
+                lang: "markdown",
                 queue: {},
                 content: val
             });
