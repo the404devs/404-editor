@@ -236,7 +236,7 @@ var init = function(id) {
         if (val === null) {
             // ...we will initialize a new one. 
             // ...with this content:
-            val = "/* Welcome to 404Editor v2.0.2! */";
+            val = "/* Welcome to 404Editor v2.0.4! */";
             var defaultID = Date.now().toString() + ":" + Math.random().toString().replace(".", "");
             // currentFileID = defaultID;
 
