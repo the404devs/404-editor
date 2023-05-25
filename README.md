@@ -16,6 +16,10 @@ https://editor.the404.nl
 - 1.2.1
 - 1.2.2
 
+### *2.0.4 (05/25/2023)*
+------------------------
+- Enable shell script support
+
 ### *2.0.3 (09/05/2022)*
 ------------------------
 - Font size is configurable
