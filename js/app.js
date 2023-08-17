@@ -60,7 +60,7 @@ var init = function(id) {
 
     $("#workspace-name").html("<b>Workspace:</b> " + sanitize(editorId)); //Display the name of the editor on the page
 
-    document.title = sanitize(editorId) + " — 404-Editor";
+    document.title = sanitize(editorId) + " | 404-Editor";
 
     // This is the local storage field name where we store the user theme
     // We set the theme per user, in the browser's local storage
