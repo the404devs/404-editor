@@ -1,0 +1,150 @@
+<!DOCTYPE HTML>
+<html>
+
+<head>
+    <title>404-Editor</title>
+    <link rel="stylesheet" href="css/app.css" type="text/css" media="screen" charset="utf-8">
+    <script src="https://kit.fontawesome.com/a79a931136.js" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+    <!--     <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.2.6/ace.js"></script> -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.23.4/ace.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/7.18.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/7.18.0/firebase-database.js"></script>
+</head>
+
+<body onload="$('#join-modal').show(); $('#id-input').focus()">
+    <h2 id="welcome">Welcome to 404-Editor!</h2>
+    <div id="header" class="header">
+        <div id="workspace-name">
+            <b>Workspace:</b>
+        </div>
+        <div id="logo"><b>404-Editor</b>
+        </div>
+    </div>
+
+    <div id="editor"></div>
+    <div id="loader"></div>
+    <span id="nav-open" style="font-size:30px;cursor:pointer" onclick="openNav()"><i class="fas fa-bars"></i></span>
+    <div id="navbox" class="sidenav">
+        <a onclick="closeNav()"><i class="fas fa-times"></i> Close</a>
+        <a href="https://the404.nl"><i class="fas fa-home"></i> The404 Home</a>
+        <a onclick="$('#join-modal').show(); $('#id-input').focus()"><i class="fas fa-sign-in-alt"></i> Join Workspace</a>
+        <a onclick="downloadWorkspace()"><i class="fas fa-download"></i> Download</a>
+        <a onclick="deleteWorkspace()"><i class="fas fa-trash"></i> Delete Workspace</a>
+        <a onclick="$('#pref-modal').show()"><i class="fas fa-cog"></i> Preferences</a>
+        <a href="https://github.com/the404devs/404-editor"><i class="fab fa-github"></i> Source (GitHub)</a>
+        <br>
+        <p>
+            404-Editor
+            <br> v2.0.5 (08/17/2023)
+            <br> Owen Bowden
+        </p>
+    </div>
+
+    <div id="join-modal" class="modal">
+        <!-- Modal content -->
+        <div class="modal-content">
+            <div class="modal-header">
+                <span id="join-close" class="close" onclick="$('#join-modal').fadeOut()">×</span>
+                <h3>404-Editor: Join or Create a Workspace</h3>
+            </div>
+            <div class="modal-body" style="max-height: 400px;">
+                <input class="input" id="id-input" name="id" placeholder="Type name to join/create workspace." required>
+                <br>
+                <button type="submit" class="button" onclick="join()"><span>Join</span></button>
+            </div>
+            <div class="modal-footer">
+                <p>If no workspace with the name exists, a new one will be created.</p>
+            </div>
+        </div>
+    </div>
+    <div id="pref-modal" class="modal">
+        <!-- Modal content -->
+        <div class="modal-content">
+            <div class="modal-header">
+                <span class="close" onclick="$('#pref-modal').fadeOut()">×</span>
+                <h3>Editor Preferences</h3>
+            </div>
+            <div class="modal-body" style="max-height: 400px; text-align: left;">
+                <!-- overflow-y:scroll ^^ -->
+                <div>
+                    <label>Editor Theme: </label>
+                    <select id="select-theme" class="input">
+                        <optgroup label="Light">
+                            <option value="ace/theme/chrome">Chrome</option>
+                            <option value="ace/theme/clouds">Clouds</option>
+                            <option value="ace/theme/crimson_editor">Crimson Editor</option>
+                            <option value="ace/theme/dawn">Dawn</option>
+                            <option value="ace/theme/dreamweaver">Dreamweaver</option>
+                            <option value="ace/theme/eclipse">Eclipse</option>
+                            <option value="ace/theme/github">GitHub</option>
+                            <option value="ace/theme/iplastic">IPlastic</option>
+                            <option value="ace/theme/solarized_light">Solarized Light</option>
+                            <option value="ace/theme/textmate">TextMate</option>
+                            <option value="ace/theme/tomorrow">Tomorrow</option>
+                            <option value="ace/theme/xcode">XCode</option>
+                            <option value="ace/theme/kuroir">Kuroir</option>
+                            <option value="ace/theme/katzenmilch">KatzenMilch</option>
+                            <option value="ace/theme/sqlserver">SQL Server</option>
+                        </optgroup>
+                        <optgroup label="Dark">
+                            <option value="ace/theme/ambiance">Ambiance</option>
+                            <option value="ace/theme/chaos">Chaos</option>
+                            <option value="ace/theme/clouds_midnight">Clouds Midnight</option>
+                            <option value="ace/theme/cobalt">Cobalt</option>
+                            <option value="ace/theme/gruvbox">Gruvbox</option>
+                            <option value="ace/theme/idle_fingers">Idle Fingers</option>
+                            <option value="ace/theme/kr_theme">krTheme</option>
+                            <option value="ace/theme/merbivore">Merbivore</option>
+                            <option value="ace/theme/merbivore_soft">Merbivore Soft</option>
+                            <option value="ace/theme/mono_industrial">Mono Industrial</option>
+                            <option value="ace/theme/monokai">Monokai</option>
+                            <option value="ace/theme/pastel_on_dark">Pastel on Dark</option>
+                            <option value="ace/theme/solarized_dark">Solarized Dark</option>
+                            <option value="ace/theme/terminal">Terminal</option>
+                            <option value="ace/theme/tomorrow_night">Tomorrow Night</option>
+                            <option value="ace/theme/tomorrow_night_blue">Tomorrow Night Blue</option>
+                            <option value="ace/theme/tomorrow_night_bright">Tomorrow Night Bright</option>
+                            <option value="ace/theme/tomorrow_night_eighties">Tomorrow Night 80s</option>
+                            <option value="ace/theme/twilight">Twilight</option>
+                            <option value="ace/theme/vibrant_ink">Vibrant Ink</option>
+                        </optgroup>
+		    </select>
+                    <br>
+                    <label>Language: </label>
+                    <select id="select-lang" class="input">
+                        <option value="batchfile" id=".bat">Batch</option>
+                        <option value="c_cpp" id=".c">C and C++</option>
+                        <option value="csharp" id=".cs">C#</option>
+                        <option value="css" id=".css">CSS</option>
+                        <option value="html" id=".html">HTML</option>
+                        <option value="ini" id=".ini">INI</option>
+                        <option value="java" id=".java">Java</option>
+                        <option value="javascript" id=".js">JavaScript</option>
+                        <option value="json" id=".json">JSON</option>
+                        <option value="lua" id=".lua">Lua</option>
+                        <option value="markdown" id=".md">Markdown</option>
+                        <option value="php" id=".php">PHP</option>
+                        <option value="python" id=".py">Python</option>
+                        <option value="sh" id=".sh">Shell Script</option>
+                        <option value="sql" id=".sql">SQL</option>
+                        <option value="text" id=".txt">Text</option>
+                        <option value="vbscript" id=".vbs">VBScript</option>
+                        <option value="xml" id=".xml">XML</option>
+		    </select>
+                    <br>
+                    <label>Editor Font Size (px): </label>
+                    <input id="font-size" class="input" type="number" style="width:50px">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <p>Language is synced between all clients.</p>
+            </div>
+        </div>
+    </div>
+    <script src="js/app.js"></script>
+    <!-- <script src="js/app2.js"></script> -->
+
+</body>
+
+</html>

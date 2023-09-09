@@ -1,4 +1,4 @@
-var firebaseConfig = {
+const firebaseConfig = {
     apiKey: "AIzaSyB4NTU1ziKd7YcrNzpPZSKU6ZKyJwX81zI",
     authDomain: "editor-8a0f1.firebaseapp.com",
     databaseURL: "https://editor-8a0f1.firebaseio.com",
@@ -9,87 +9,407 @@ var firebaseConfig = {
 };
 // Initialize Firebase
 firebase.initializeApp(firebaseConfig);
+// firebase.analytics();
+firebase.firestore().settings({
+    cacheSizeBytes: firebase.firestore.CACHE_SIZE_UNLIMITED,
+    merge: true
+});
+firebase.firestore().enablePersistence({
+    synchronizeTabs: true
+});
 
 //Global state vars
-var db = firebase.database(); //Reference to the database
-var doc;
-var editor;
-var editorValues; //Collection of all editors
-var editorId; //Current editor
-var applyingDeltas = false;
-var currentEditorValue = null;
-var queueRef = null;
-var uid = Math.random().toString();
-var currentFileID = null;
+const db = firebase.firestore();
+let editor;
+let user;
+let workspaceName;
+let applyingDeltas = false;
+let docRef;
+let unsubscribe;
+const sessionId = Math.random().toString().slice(2);
+const modelist = ace.require("ace/ext/modelist");
+const themelist = ace.require("ace/ext/themelist");
 
-$('#id-input').keypress(function(e) { if (e.keyCode == 13) { join(); } });
+// This is the local storage field name where we store the user theme
+// We set the theme per user, in the browser's local storage
+let LS_DARK_THEME_KEY = "editor-dark-theme";
+let LS_LIGHT_THEME_KEY = "editor-light-theme";
+let LS_THEME_PREF_KEY = "editor-theme-pref";
+let EDITOR_FONT_SIZE = "editor-font-size";
 
-var join = function() {
-    var id = sanitize($("#id-input").val());
-    var re = /[#$.\[\]]+/g;
-    if (id.trim() === "" || id === null || id.match(re)) {
-        console.log("bad");
-        alert("Please use only alphanumeric characters in the workspace name!\n\nThe following characters cannot be used:\n $  #  .  [  ]");
-        return;
-    }
-    $("#join-modal").fadeOut();
-    $("#id-input").val("");
-    closeNav();
-    init(id);
+// This function will return the user theme or the Tomorrow theme (which
+// is the default)
+function getLightTheme() {
+    return localStorage.getItem(LS_LIGHT_THEME_KEY) || "ace/theme/tomorrow";
 }
 
-var init = function(id) {
-    editorId = id; //set editor id
-    console.log("editor id is " + editorId)
-        // console.log()
-        // var fileRef = db.ref("editor_values/" + editorId + "/files");
+function getDarkTheme() {
+    return localStorage.getItem(LS_DARK_THEME_KEY) || "ace/theme/tomorrow_night";
+}
 
-    //reset event listeners
-    if (currentEditorValue) {
-        if (currentEditorValue.key == editorId) { return; }
-        currentEditorValue.child("content").off("value");
-        currentEditorValue.child("lang").off("value");
+function setEditorTheme() {
+    if (getThemePref() === "DARK") {
+        editor.setTheme(getDarkTheme());
+    } else if (getThemePref() === "LIGHT") {
+        editor.setTheme(getLightTheme());
+    } else if (getThemePref() === "AUTO") {
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            editor.setTheme(getDarkTheme());
+        } else {
+            editor.setTheme(getLightTheme());
+        }
     }
-    if (queueRef) { queueRef.off("child_added") }
-    if (editor) { editor.off("change") }
+}
 
-    //if no id is specified just stop
-    if (!editorId) {
+//Function to get preferred font size
+function getFontSize() {
+    return localStorage.getItem(EDITOR_FONT_SIZE) || 12;
+}
+
+function load() {
+    loadAceLangOptions();
+    loadAceThemeOptions();
+    setUITheme();
+
+    firebase.auth().onAuthStateChanged((user) => {
+        if (user) {
+            // User is signed in.
+            console.log('User is logged in:', user.email);
+            postLogin();
+        } else {
+            // No user is signed in.
+            console.log('No user is logged in');
+            showModal('#login-modal');
+        }
+    });
+}
+
+function getThemePref() {
+    let LS_THEME_PREF_KEY = "editor-theme-pref";
+    return localStorage.getItem(LS_THEME_PREF_KEY) || "DARK";
+}
+
+function getAutoTheme() {
+    return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? "DARK" : "LIGHT";
+}
+
+function setUITheme() {
+    if (getThemePref() === "DARK") {
+        darkUI();
+    } else if (getThemePref() === "LIGHT") {
+        lightUI();
+    } else if (getThemePref() === "AUTO") {
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            darkUI();
+        } else {
+            lightUI();
+        }
+    }
+}
+
+function lightUI() {
+    $('body').removeClass('theme-dark').addClass('theme-light');
+}
+
+function darkUI() {
+    $('body').removeClass('theme-light').addClass('theme-dark');
+}
+
+function login() {
+    const fields = $("#login-form").serializeArray();
+    const email = fields[0]['value'];
+    const password = fields[1]['value'];
+
+    firebase.auth().signInWithEmailAndPassword(email, password)
+        .then(function() {
+            postLogin()
+        })
+        .catch(function(error) {
+            const errorCode = error.code;
+            const errorMessage = error.message;
+            console.log("%c" + errorCode + ": " + errorMessage, "color:red;font-weight:bold;font-style:italic;");
+            $("#errmsg-login").html(error.message).css("opacity", "1").css("height", "34px");
+            setTimeout(() => { $("#errmsg-login").css("opacity", "0"); }, 3000);
+            setTimeout(() => { $("#errmsg-login").css("height", "0"); }, 3000);
+            setTimeout(() => { $("#errmsg-login").html(""); }, 3000);
+        });
+    
+}
+
+function postLogin() {
+    document.cookie = "state=logged;";
+    hideModal('#login-modal');
+    user = firebase.auth().currentUser;
+    console.log(user.uid);
+    $('#username').text(user.email);
+    fetchUserWorkspaces().then(function () {
+        showModal('#join-modal');
+    });
+}
+
+function logout() {
+    document.cookie = "state=unlogged"
+    firebase.auth().signOut();
+
+    closeNav();
+    showModal('#login-modal');
+    $("#loader").fadeIn();
+    $(".welcome").fadeIn();
+    $(".header").fadeOut();
+    $("#editor").fadeOut();
+    $("#nav-open").fadeOut();
+    $("#join-close").fadeOut();
+
+    if (editor) { editor.off("change") }
+    if (docRef) { unsubscribe(); }
+    $('#username').text('');
+
+    $("#workspace-name").html("<b>Workspace:</b> "); //Display the name of the editor on the page
+
+    document.title = "404-Editor";
+}
+
+function signup() {
+    const fields = $("#signup-form").serializeArray();
+    const email = fields[0]['value'];
+    const password = fields[1]['value'];
+
+    firebase.auth().createUserWithEmailAndPassword(email, password)
+        .then(function() {
+            firebase.auth().signInWithEmailAndPassword(email, password).then(function() {
+                hideModal('#signup-modal');
+                postLogin();
+            })
+        })
+        .catch(function(error) {
+            const errorCode = error.code;
+            const errorMessage = error.message;
+            console.log("%c" + errorCode + ": " + errorMessage, "color:red;font-weight:bold;font-style:italic;");
+            $("#errmsg-signup").html(error.message).css("opacity", "1").css("height", "34px");
+            setTimeout(() => { $("#errmsg-signup").css("opacity", "0"); }, 3000);
+            setTimeout(() => { $("#errmsg-signup").css("height", "0"); }, 3000);
+            setTimeout(() => { $("#errmsg-signup").html(""); }, 3000);
+        });
+}
+
+async function fetchUserWorkspaces() {
+    const workspaces = [];
+    const workspaceSnap = await db.collection(user.uid).get({ source:'server' });
+
+    workspaceSnap.forEach((doc) => {
+        workspaces.push({ id: doc.id, ...doc.data() });
+    });
+
+    workspaces.sort(function(a, b) {
+        return b.lastUpdated - a.lastUpdated
+    });
+
+    $('#user-workspace-list').empty();
+    workspaces.forEach(workspace => {
+        const workspaceLastUpdated = new Date(parseInt(workspace.lastUpdated));
+
+        $('#user-workspace-list').append(
+            $("<li>").append(
+                $("<a>").addClass('link').text(workspace.id)
+            ).append(
+                $("<span>").text(modelist.modesByName[workspace.lang].caption)
+            ).append(
+                $("<span>").text(`${workspaceLastUpdated.toLocaleDateString()}, ${('0'  + workspaceLastUpdated.getHours()).slice(-2)+':'+('0' + workspaceLastUpdated.getMinutes()).slice(-2)}`)
+            ).attr('onclick', `joinWorkspace('${workspace.id}')`)
+        );
+    });
+}
+
+async function createWorkspace() {
+    const workspaceName = sanitize($('#id-input').val());
+
+    const workspaceRef = db.collection(user.uid).doc(workspaceName);
+    const workspaceSnap = await workspaceRef.get()
+
+    if (workspaceSnap.exists) {
+        console.log("A workspace with this name already exists.");
+        $("#errmsg-create").html("A workspace with this name already exists.").css("opacity", "1").css("height", "34px");
+        setTimeout(() => { $("#errmsg-create").css("opacity", "0"); }, 3000);
+        setTimeout(() => { $("#errmsg-create").css("height", "0"); }, 3000);
+        setTimeout(() => { $("#errmsg-create").html(""); }, 3000);
         return;
     }
 
-    $("#workspace-name").html("<b>Workspace:</b> " + sanitize(editorId)); //Display the name of the editor on the page
+    await workspaceRef.set({
+        content: "",
+        lang: "markdown",
+        queue: {},
+        lastUpdated: Date.now().toString()
+    });
 
-    document.title = sanitize(editorId) + " | 404-Editor";
+    fetchUserWorkspaces();
+    hideModal('#create-modal');
+    joinWorkspace(workspaceName);
+}
 
-    // This is the local storage field name where we store the user theme
-    // We set the theme per user, in the browser's local storage
-    let LS_THEME_KEY = "editor-theme";
-    let EDITOR_FONT_SIZE = "editor-font-size"
+async function joinWorkspace(editorId) {
+    closeNav();
+    aceSetup(editorId);
 
-    // This function will return the user theme or the Tomorrow theme (which
-    // is the default)
-    function getTheme() {
-        return localStorage.getItem(LS_THEME_KEY) || "ace/theme/tomorrow_night";
+    let lowerBoundTimestamp = Date.now();
+    
+    docRef = db.collection(user.uid).doc(editorId);
+    
+    unsubscribe = docRef.onSnapshot((doc) => {
+        if (doc.exists) {
+            const lang = doc.data().lang;
+            const cLang = $selectLang.val();
+            if (cLang !== lang && lang !== null) {
+                //Ensure the language isn't a null value. 
+                //This caused problems with deleting workspaces, as the null value would trigger an update, recreating the workspace with just a lang key.
+                $selectLang.val(lang).change();
+                fetchUserWorkspaces();
+            }
+
+            const queue = doc.data().queue || {};
+
+            // Iterate over each timestamp in the queue
+            for (const key in queue) {
+                // Get the timestamp and data
+                const [timestamp, originSessionId] = key.split(":");
+                const data = queue[key];
+
+                // Convert timestamp to a number
+                const timestampNum = parseInt(timestamp);
+
+                // Do not apply changes from the past
+                if (lowerBoundTimestamp >= timestampNum) {
+                    // console.log('ignoring change from before session load');
+                    continue; // Use continue to skip this iteration
+                }
+
+                // Ignore changes made by this client
+                if (originSessionId === sessionId) {
+                    // console.log('ignoring self change');
+                    continue; // Use continue to skip this iteration
+                }
+
+                // Apply the data to the editor
+                if (!applyingDeltas) {
+                    applyingDeltas = true;
+                    // console.log(data.event);
+
+                    editor.getSession().getDocument().applyDeltas([data.event]);
+
+                    applyingDeltas = false;
+                    lowerBoundTimestamp = timestampNum;
+                }
+            }
+        } else {
+            console.log('Document does not exist');
+        }
+      }, (error) => {
+        console.error('Error getting document:', error);
+    });
+
+    editor.on('change', function (e) {
+        if (applyingDeltas) { return; }
+
+        const timestamp = Date.now().toString();
+    
+        const newContent = editor.getValue();
+        const key = `${timestamp}:${sessionId}`;
+    
+        const updateData = {};
+        updateData[key] = { by: sessionId, author: user.uid, event: e };
+    
+        docRef.set(
+            { content: newContent, queue: updateData, lastUpdated: timestamp },
+            { merge: true }
+        )
+        .then(() => {
+            console.log('Document successfully updated!');
+        })
+        .catch((error) => {
+            console.error('Error updating document:', error);
+        });
+    });
+
+    // Select the desired programming language you want to code in 
+    let $selectLang = $("#select-lang").change(function() {
+        const timestamp = Date.now().toString();
+        // Set the language in the Firebase object
+        // This is a preference per editor
+        docRef.set({ lang: this.value, lastUpdated: timestamp }, { merge: true });
+        // Set the editor language
+        editor.getSession().setMode("ace/mode/" + this.value);
+        fetchUserWorkspaces();
+    });
+
+    let doc = await docRef.get();
+    initialContent = doc.data().content;
+    if (initialContent == "") {
+        initialContent = `# Welcome to 404-Editor v3.0.0!`;
     }
+    applyingDeltas = true;
+    editor.setValue(initialContent, -1);
+    applyingDeltas = false;
 
-    //Function to get preferred font size
-    function getFontSize() {
-        return localStorage.getItem(EDITOR_FONT_SIZE) || 12;
-    }
+    // Hide the spinner and other loading crap, show the editor and buttons
+    hideModal('#join-modal');
+    $("#loader").fadeOut();
+    $(".welcome").fadeOut();
+    $(".header").fadeIn();
+    $("#editor").fadeIn();
+    $("#nav-open").fadeIn();
+    $("#join-close").fadeIn();
+
+    // And finally, focus the editor!      
+    editor.focus();
+}
+
+function aceSetup(editorId) {
+    if (editor) { editor.off("change") }
+    if (docRef) { unsubscribe(); }
+
+    workspaceName = editorId;
+    //Display the name of the editor on the page
+    document.title = workspaceName + " | 404-Editor";
+    $("#workspace-name").html("<b>Workspace:</b> " + workspaceName);
 
     // Select the desired theme of the editor
-    $("#select-theme").change(function() {
+    $("#select-light-theme").change(function() {
         // Set the theme in the editor
-        editor.setTheme(this.value);
+        if (getThemePref() === "LIGHT" || getAutoTheme() === "LIGHT") {
+            editor.setTheme(this.value);
+        }
 
         // Update the theme in the localStorage
         // We wrap this operation in a try-catch because some browsers don't
         // support localStorage (e.g. Safari in private mode)
         try {
-            localStorage.setItem(LS_THEME_KEY, this.value);
+            localStorage.setItem(LS_LIGHT_THEME_KEY, this.value);
         } catch (e) {}
-    }).val(getTheme());
+    }).val(getLightTheme());
+
+    $("#select-dark-theme").change(function() {
+        // Set the theme in the editor
+        if (getThemePref() === "DARK" || getAutoTheme() === "DARK") {
+            editor.setTheme(this.value);
+        }
+
+        // Update the theme in the localStorage
+        // We wrap this operation in a try-catch because some browsers don't
+        // support localStorage (e.g. Safari in private mode)
+        try {
+            localStorage.setItem(LS_DARK_THEME_KEY, this.value);
+        } catch (e) {}
+    }).val(getDarkTheme());
+
+    $('input[name="theme-toggles"]').change(function () {
+        const selectedValue = $('input[name="theme-toggles"]:checked').val();
+
+        try {
+            localStorage.setItem(LS_THEME_PREF_KEY, selectedValue);
+            setEditorTheme();
+            setUITheme();
+        } catch (e) {}
+    });
 
     $("#font-size").change(function() {
         // Update font size
@@ -100,205 +420,101 @@ var init = function(id) {
         } catch (e) {}
     }).val(getFontSize());
 
-    // Select the desired programming language you want to code in 
-    var $selectLang = $("#select-lang").change(function() {
-        // Set the language in the Firebase object
-        // This is a preference per editor
-        currentEditorValue.update({
-            lang: this.value
-        });
-        // Set the editor language
-        editor.getSession().setMode("ace/mode/" + this.value);
-    });
-
-    // Generate a pseudo user id
-    // This will be used to know if it's me the one who updated
-    // the code or not
-    editor = null;
-
-    // Write the entries in the database 
-    editorValues = db.ref("editor_values");
-
-    // Get the current editor reference
-    currentEditorValue = editorValues.child(editorId);
-
-    // console.log(currentEditorValue.child("files").child("1633719398985:08581516502984317")).get();
-    // var keys = Object.keys(currentEditorValue.child("files"))
-    // var allFilesInWorkspace = [];
-    // fileRef.on("value", function(snapshot) {
-    //     const data = snapshot.val() || null;
-    //     if (data) {
-    //         allFilesInWorkspace = Object.keys(snapshot.val());
-    //         currentFileID = allFilesInWorkspace[0];
-    //     }
-    // });
-
-
-    // Store the current timestamp (when we opened the page)
-    // It's quite useful to know that since we will
-    // apply the changes in the future only
-    var openPageTimestamp = Date.now();
-    // Take the editor value on start and set it in the editor
-
-    console.log(currentEditorValue.child("files"))
-        // fileRef.child(currentFileID).child("content").once("value", function(contentRef) {
-    currentEditorValue.child("content").once("value", function(contentRef) {
-        // Somebody changed the lang. Hey, we have to update it in our editor too!
-        // currentEditorValue.child("files").child(currentFileID).child("lang").on("value", function(r) {
-        currentEditorValue.child("lang").on("value", function(r) {
-            var value = r.val();
-            // Set the language
-            var cLang = $selectLang.val();
-            if (cLang !== value && value !== null) {
-                //Ensure the language isn't a null value. 
-                //This caused problems with deleting workspaces, as the null value would trigger an update, recreating the workspace with just a lang key.
-                $selectLang.val(value).change();
-            }
-        });
-
-        // Initialize the ACE editor
-        editor = ace.edit("editor");
-        editor.setTheme(getTheme());
-        editor.$blockScrolling = Infinity;
-        $("#editor").css("font-size", getFontSize() + "px");
-
-
-
-        // Get the queue reference
-        queueRef = currentEditorValue.child("queue");
-        // queueRef = currentEditorValue.child("files").child(currentFileID).child("queue");
-
-        // This boolean is going to be true only when the value is being set programmatically
-        // We don't want to end with an infinite cycle, since ACE editor triggers the
-        // `change` event on programmatic changes (which, in fact, is a good thing)
-        applyingDeltas = false;
-
-        // When we change something in the editor, update the value in Firebase
-        editor.on("change", function(e) {
-
-            // In case the change is emitted by us, don't do anything
-            // (see below, this boolean becomes `true` when we receive data from Firebase)
-            if (applyingDeltas) {
-                return;
-            }
-            // Set the content in the editor object
-            // This is being used for new users, not for already-joined users.
-            currentEditorValue.update({
-                content: editor.getValue()
-            });
-            // Generate an id for the event in this format:
-            //  <timestamp>:<random>
-            // We use a random thingy just in case somebody is saving something EXACTLY
-            // in the same moment
-            queueRef.child(Date.now().toString() + ":" + Math.random().toString().slice(2)).set({
-                event: e,
-                by: uid
-            }).catch(function(e) {
-                console.error(e);
-            });
-        });
-
-        // Get the editor document object 
-
-        doc = editor.getSession().getDocument();
-
-        // Listen for updates in the queue
-        queueRef.on("child_added", function(ref) {
-            // Get the timestamp
-            var timestamp = ref.key.split(":")[0];
-
-            // Do not apply changes from the past
-            if (openPageTimestamp > timestamp) {
-                return;
-            }
-
-            // Get the snapshot value
-            var value = ref.val();
-            // console.log(value.by);
-
-            // In case it's me who changed the value, I am
-            // not interested to see twice what I'm writing.
-            // So, if the update is made by me, it doesn't
-            // make sense to apply the update
-            if (value.by === uid) { return; }
-
-            // We're going to apply the changes by somebody else in our editor
-            //  1. We turn applyingDeltas on
-            applyingDeltas = true;
-            //  2. Update the editor value with the event data
-            doc.applyDeltas([value.event]);
-            //  3. Turn off the applyingDeltas
-            applyingDeltas = false;
-        });
-
-        // Get the current content
-        var val = contentRef.val();
-
-        // If an editor with that name doesn't exist already....
-        if (val === null) {
-            // ...we will initialize a new one. 
-            // ...with this content:
-            val = "/* Welcome to 404Editor v2.0.4! */";
-            var defaultID = Date.now().toString() + ":" + Math.random().toString().replace(".", "");
-            // currentFileID = defaultID;
-
-            // Here's where we set the initial content of the editor
-            // editorValues.child(editorId).set({
-            //     files: {
-            //         [defaultID]: {
-            //             name: "Untitled",
-            //             content: "",
-            //             lang: "javascript",
-            //             queue: {},
-            //         }
-            //     }
-            // });
-            editorValues.child(editorId).set({
-                lang: "markdown",
-                queue: {},
-                content: val
-            });
-        }
-        // We're going to update the content, so let's turn on applyingDeltas 
-        applyingDeltas = true;
-
-        // ...then set the value
-        // -1 will move the cursor at the beginning of the editor, preventing
-        // selecting all the code in the editor (which is happening by default)
-        editor.setValue(val, -1);
-
-        // ...then set applyingDeltas to false
-        applyingDeltas = false;
-
-        // Hide the spinner and other loading crap, show the editor and buttons
-        $("#loader").fadeOut();
-        $("#welcome").fadeOut();
-        $("#editor").fadeIn();
-        $("#buttons").fadeIn();
-        $("#header").fadeIn();
-        $("#nav-open").fadeIn();
-        $("#join-close").show();
-
-        // And finally, focus the editor!       
-        editor.focus();
-        return;
-    });
+    // Initialize the ACE editor
+    editor = ace.edit("editor");
+    setEditorTheme();
+    editor.$blockScrolling = Infinity;
+    $("#editor").css("font-size", getFontSize() + "px");
+    $('input.radio[name="theme-toggles"]').prop('checked', false);
+    $(`input.radio[name="theme-toggles"][value="${getThemePref()}"]`).prop('checked', true);
 }
 
+// Function to calculate the diff between two strings
+function stringDiff(oldStr, newStr) {
+    const diff = [];
+    const dmp = new diff_match_patch();
+  
+    const patches = dmp.patch_make(oldStr, newStr);
+    patches.forEach(patch => {
+        patch.diffs.forEach(part => {
+            if (part[0] === 0) {
+                // No change
+            } else if (part[0] === 1) {
+                // Insertion
+                diff.push({ type: 'insert', start: patch.start1, lines: part[1].split('\n') });
+            } else if (part[0] === -1) {
+                // Deletion
+                diff.push({ type: 'remove', start: patch.start1, end: patch.start1 + part[1].length });
+            }
+        });
+    });
+  
+    return diff;
+}
 
-/*Function to delete an existing workspace*/
-var deleteWorkspace = function() {
-    //Double check they understand what the trash can symbol means
-    if (confirm("Are you sure you want to delete this workspace?\n\nThis cannot be undone.")) {
-        editorValues.child(editorId).remove(); //Remove the editor
-        location.reload();
+function sanitize(str) {
+    //strip all html from string
+    return str.replace(/(<([^>]+)>)/ig, "");
+}
+
+function openNav() {
+    document.getElementById("navbox").style.width = "250px";
+}
+
+function closeNav() {
+    document.getElementById("navbox").style.width = "0";
+}
+
+function resetActiveModal() {
+    $('.modal').removeClass('active');
+}
+
+function showModal(id) {
+    resetActiveModal();
+    $(id).addClass('shown').addClass('active').removeClass('hidden');
+    $(id).fadeIn();
+    const focusTarget = $(id).find('.first-focus')[0]
+    if (focusTarget){
+        focusTarget.focus();
+    }
+}
+
+function hideModal(id) {
+    resetActiveModal();
+    $(id).removeClass('shown').addClass('hidden');
+    $(id).fadeOut();
+}
+
+function loadAceLangOptions() {
+    const modes = modelist.modes;
+
+    for (mode in modes) {
+        $('#select-lang').append(
+            $('<option>').attr('value', modes[mode].name).attr('id', modes[mode].extensions).text(modes[mode].caption)
+        );
+    }
+}
+
+function loadAceThemeOptions() {
+    const themes = themelist.themes;
+
+    for (theme in themes) {
+        if (themes[theme].isDark) {
+            $('#select-dark-theme').append(
+                $('<option>').attr('value', themes[theme].theme).text(themes[theme].caption)
+            );
+        } else {
+            $('#select-light-theme').append(
+                $('<option>').attr('value', themes[theme].theme).text(themes[theme].caption)
+            );
+        }
     }
 }
 
 /*Function to download a workspace*/
-var downloadWorkspace = function() {
+function downloadWorkspace() {
 
-    var save = function(data, filename, type) {
+    function save(data, filename, type) {
             var file = new Blob([data], { type: type }); //New file variable (blob?) with the contents and type
             if (window.navigator.msSaveOrOpenBlob) // IE10+
                 window.navigator.msSaveOrOpenBlob(file, filename);
@@ -317,9 +533,9 @@ var downloadWorkspace = function() {
         }
         /*Function to determine the language, and therefore the correct file extension*/
 
-    var determineLang = function() {
+    function determineLang() {
         /*Function to determine the selected option in a <select> element. Takes the element as a parameter.*/
-        var getSelectedOption = function(sel) {
+        function getSelectedOption(sel) {
                 var opt; //To hold the option
                 //For loop to go through each option in the select tag
                 for (var i = 0, len = sel.options.length; i < len; i++) {
@@ -332,42 +548,30 @@ var downloadWorkspace = function() {
             }
             //Return the id of the selected option
         return getSelectedOption(document.getElementById("select-lang")).id;
-        //I painstakingly made the ids of each option correspond to the proper file extension (C# has id '.cs', etc)
     }
 
-    // var text = ""; //This string will hold the contents of our file
-    // //Go through each line of the editor, which are separate entities
-    // $('.ace_line').each(function() {
-    //     text += $(this).text() + "\r\n"; //Add the text from that line to our string, and append a newline at the end
-    // });
-
     let text = editor.getValue();
-    var fullname = editorId + determineLang(); //Construct the complete filename from the name of the editor and the file extension
+    var fullname = workspaceName + determineLang(); //Construct the complete filename from the name of the editor and the file extension
     save(text, fullname, "txt"); //Save the file with our save function. Type is plain text, since that's all these kind of files are
 }
 
-var sanitize = function(str) {
-    //strip all html from string
-    return str.replace(/(<([^>]+)>)/ig, "");
-}
-
-var stalinSort = function(arr) {
-    // why is this here?
-    arr2 = [];
-    min = arr[0];
-    for (var i = 0; i <= arr.length - 1; i++) {
-        if (arr[i] >= min) {
-            arr2.push(arr[i]);
-            min = arr[i];
-        }
+async function deleteWorkspace() {
+    //Double check they understand what the trash can symbol means
+    if (confirm("Are you sure you want to delete this workspace?\n\nThis cannot be undone.")) {
+        if (editor) { editor.off("change") }
+        if (docRef) { unsubscribe(); }
+        await docRef.delete();
+        console.log(`Deleted workspace ${workspaceName}`);
+        // fetchUserWorkspaces();
+        location.reload();
     }
-    return arr2;
 }
 
-function openNav() {
-    document.getElementById("navbox").style.width = "250px";
-}
+window.addEventListener('DOMContentLoaded', load);
 
-function closeNav() {
-    document.getElementById("navbox").style.width = "0";
-}
+window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
+    if (getThemePref() === "AUTO") {
+        if (editor) { setEditorTheme(); }
+        setUITheme();
+    }
+});

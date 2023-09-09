@@ -6,6 +6,8 @@ Originally written on May 15, 2018 during class because I didn't want to work on
 
 Rewritten August 19-20, 2020.
 
+Rewritten once more, September 8-9, 2023.
+
 *Protip: Never type on the same line as someone else, bad things happen.*
 
 https://editor.the404.nl
@@ -15,6 +17,26 @@ https://editor.the404.nl
 - 1.1.0
 - 1.2.1
 - 1.2.2
+- 2.0.5
+
+### *3.0.0 (09/09/2023)*
+------------------------
+- The major rewrite I intended for 2.0.0 to be.
+- Migrated to using Cloud Firestore.
+- Accounts are now a thing. Sign up with email/password.
+    - Workspaces are tied to your account. Nobody else can touch them, in theory.
+- Separated Join/Create Workspace UI
+    - 'Join Workspace' modal shows a list of all your workspaces, sorted by most recently modified.
+    - 'Create Workspace' modal is identical to the old UI.
+- New theme functionality:
+    - Toggle UI between light & dark themes
+    - Set preferred colour schemes for light/dark modes.
+    - Ability to match system light/dark mode.
+
+
+- TODO:
+    - Create icon
+    - Password reset UI
 
 ### *2.0.5 (08/17/2023)*
 ------------------------
