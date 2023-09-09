@@ -340,7 +340,7 @@ async function joinWorkspace(editorId) {
         const timestamp = Date.now().toString();
         // Set the language in the Firebase object
         // This is a preference per editor
-        docRef.set({ lang: this.value, lastUpdated: timestamp }, { merge: true });
+        docRef.set({ lang: this.value }, { merge: true });
         // Set the editor language
         editor.getSession().setMode("ace/mode/" + this.value);
         fetchUserWorkspaces();
