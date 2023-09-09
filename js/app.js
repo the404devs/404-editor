@@ -122,7 +122,7 @@ function login() {
 
     firebase.auth().signInWithEmailAndPassword(email, password)
         .then(function() {
-            postLogin()
+            postLogin();
         })
         .catch(function(error) {
             const errorCode = error.code;
@@ -142,6 +142,10 @@ function postLogin() {
     user = firebase.auth().currentUser;
     console.log(user.uid);
     $('#username').text(user.email);
+    $('#login-email').val('');
+    $('#login-pass').val('');
+    $('#signup-email').val('');
+    $('#signup-pass').val('');
     fetchUserWorkspaces().then(function () {
         showModal('#join-modal');
     });
@@ -244,6 +248,7 @@ async function createWorkspace() {
 
     fetchUserWorkspaces();
     hideModal('#create-modal');
+    $('#id-input').val('');
     joinWorkspace(workspaceName);
 }
 
