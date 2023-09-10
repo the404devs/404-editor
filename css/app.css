@@ -2,28 +2,34 @@
     --foreground: #ffffff;
     --background: #151824;
     --background-alt: lightslategrey;
-    --background-transparent: rgba(21, 24, 36, 0.8);
+    --background-transparent: rgba(21, 24, 36, 0.75);
     --theme: #06e0d0;
+    --theme-alt: #c779ce;
     --text: #ffffff;
     --text-alt: #151824;
     --border: #ffffff;
     --border-alt: rgba(255,255,255,0.3);
     --border-radius: 5px;
-    --shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+    --scrollbar: rgba(21, 24, 36, 0.75);
+    --shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
+    --shadow-alt: 0 3px 6px rgba(6, 224, 208, 0.5);
 }
 
 .theme-light {
     --foreground: #000;
     --background: #fff;
     --background-alt: #fff;
-    --background-transparent: rgba(241, 245, 248, 0.8);
+    --background-transparent: rgba(241, 245, 248, 0.75);
     --theme: #c779ce;
+    --theme-alt: #06e0d0;
     --text: #444;
-    --text-alt: #444;
+    --text-alt: #151824;
     --border: rgba(0,0,0,0.25);
     --border-alt: rgba(0,0,0,0.08);
     --border-radius: 5px;
-    --shadow:0 3px 6px rgba(0,0,0,0.15);
+    --scrollbar: rgba(21, 24, 36, 0.75);
+    --shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
+    --shadow-alt: 0 3px 6px rgba(199, 121, 206, 0.5);
 }
 
 @font-face {
@@ -151,11 +157,11 @@ form {
     bottom: 0;
     z-index: 11;
     margin: auto;
-    border: 8px solid var(--border);
+    border: 8px solid var(--theme);
     border-radius: 50%;
-    border-top: 8px solid var(--background-alt);
-    border-bottom: 8px solid var(--background-alt);
-    border-right: 8px solid var(--background-alt);
+    border-top: 8px solid var(--border-alt);
+    border-bottom: 8px solid var(--border-alt);
+    border-right: 8px solid var(--border-alt);
     width: 100px;
     height: 100px;
     -webkit-animation: spin 2s linear infinite;
@@ -283,10 +289,10 @@ form {
 
 .close:hover,
 .close:focus {
-    color: var(--theme);
+    color: var(--theme-alt);
     text-decoration: none;
     cursor: pointer;
-    transition: 0.25s;
+    transition: 0.2s;
 }
 
 .modal-header {
@@ -313,7 +319,7 @@ form {
     flex-wrap: wrap;
 
     scrollbar-width: thin; 
-    scrollbar-color: var(--text-alt) var(--border-alt); 
+    scrollbar-color: var(--scrollbar) var(--border-alt); 
     scrollbar-button {
         visibility: hidden;
     }
@@ -332,7 +338,7 @@ form {
 }
 
 .modal-body::-webkit-scrollbar-thumb {
-    background-color: var(--text-alt); 
+    background-color: var(--scrollbar); 
     border-radius: 5px;
 }
 
@@ -375,7 +381,7 @@ form {
 }
 
 .button:hover {
-    transform: scale(1.03);
+    transform: scale(1.05);
 }
 
 .button span {
@@ -571,6 +577,7 @@ hr {
 
 #user-workspace-list li:hover {
     transform: scale(1.03);
+    box-shadow: var(--shadow-alt);
 }
 
 #user-workspace-list li a {
