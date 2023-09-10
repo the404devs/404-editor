@@ -3,7 +3,7 @@
     --background: #151824;
     --background-alt: lightslategrey;
     --background-transparent: rgba(21, 24, 36, 0.8);
-    --highlight: #06e0d0;
+    --theme: #06e0d0;
     --text: #ffffff;
     --text-alt: #151824;
     --border: #ffffff;
@@ -17,7 +17,7 @@
     --background: #fff;
     --background-alt: #fff;
     --background-transparent: rgba(241, 245, 248, 0.8);
-    --highlight: #c779ce;
+    --theme: #c779ce;
     --text: #444;
     --text-alt: #444;
     --border: rgba(0,0,0,0.25);
@@ -32,7 +32,7 @@
 }
 
 @font-face {
-    font-family: "roboto";
+    font-family: "Roboto";
     src: url("Roboto-Regular.ttf");
 }
 
@@ -283,7 +283,7 @@ form {
 
 .close:hover,
 .close:focus {
-    color: var(--highlight);
+    color: var(--theme);
     text-decoration: none;
     cursor: pointer;
     transition: 0.25s;
@@ -424,7 +424,7 @@ form {
     /* right: 0; */
     opacity: 0.5;
     border-radius: var(--border-radius);
-    background-color: var(--highlight);
+    background-color: var(--theme);
     /* background: var(--background-gradient); */
 }
 
@@ -464,7 +464,7 @@ form {
 
 .sidenav a:hover {
     color: var(--text-alt);
-    background-color: var(--highlight);
+    background-color: var(--theme);
     transition: 0.5s;
     border-radius: 50px;
 }
@@ -479,7 +479,7 @@ form {
 }
 
 .sidenav p#username {
-    font-size: 14px;
+    font-size: 16px;
 }
 
 .sidenav b {
@@ -517,7 +517,7 @@ form {
 
 #nav-open:hover {
     color: var(--text-alt);
-    background-color: var(--highlight);
+    background-color: var(--theme);
     transition: 0.5s;
     border-radius: 50px;
 }
@@ -575,7 +575,7 @@ hr {
     transform: scale(1.03);
 }
 
-#user-workspace-list li a.link {
+#user-workspace-list li a {
     color: var(--text);
     display: block;
     font-size: 18px;
@@ -630,4 +630,31 @@ hr {
     border-radius: var(--border-radius);
     background-color: var(--background-transparent);
     box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+}
+
+.link {
+    color: var(--text-alt);
+    font-weight: bold;
+    font-family: 'Raleway';
+    font-size: 14px;
+    position: relative;
+    text-decoration: none;
+    align-self: center;
+    cursor: pointer;
+}
+
+.link:after {
+    border-bottom: 2px solid var(--text-alt);
+    bottom: 0;
+    content: "";
+    height: 2px;
+    left: 0;
+    position: absolute;
+    transition: all 0.1s;
+    width: 0;
+}
+
+.link:hover:after {
+    visibility: visible;
+    width: 100%;
 }

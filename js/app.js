@@ -141,7 +141,7 @@ function postLogin() {
     hideModal('#login-modal');
     user = firebase.auth().currentUser;
     console.log(user.uid);
-    $('#username').text(user.email);
+    $('#username').text(user.displayName);
     $('#login-email').val('');
     $('#login-pass').val('');
     $('#signup-email').val('');
@@ -163,6 +163,7 @@ function logout() {
     $("#editor").fadeOut();
     $("#nav-open").fadeOut();
     $("#join-close").fadeOut();
+    $("#join-modal").addClass("do-not-hide");
 
     if (editor) { editor.off("change") }
     if (docRef) { unsubscribe(); }
@@ -175,14 +176,17 @@ function logout() {
 
 function signup() {
     const fields = $("#signup-form").serializeArray();
-    const email = fields[0]['value'];
-    const password = fields[1]['value'];
+    const username = fields[0]['value'];
+    const email = fields[1]['value'];
+    const password = fields[2]['value'];
 
     firebase.auth().createUserWithEmailAndPassword(email, password)
         .then(function() {
             firebase.auth().signInWithEmailAndPassword(email, password).then(function() {
                 hideModal('#signup-modal');
-                postLogin();
+                firebase.auth().currentUser.updateProfile({displayName: username}).then(function() {
+                    postLogin();
+                });
             })
         })
         .catch(function(error) {
@@ -214,7 +218,7 @@ async function fetchUserWorkspaces() {
 
         $('#user-workspace-list').append(
             $("<li>").append(
-                $("<a>").addClass('link').text(workspace.id)
+                $("<a>").text(workspace.id)
             ).append(
                 $("<span>").text(modelist.modesByName[workspace.lang].caption)
             ).append(
@@ -355,6 +359,11 @@ async function joinWorkspace(editorId) {
     editor.setValue(initialContent, -1);
     applyingDeltas = false;
 
+    editor.setOption("showPrintMargin", false);
+    editor.setOption("customScrollbar", true);
+    editor.setOption("animatedScroll", true);
+    editor.setOption("scrollPastEnd", 0.5);
+
     // Hide the spinner and other loading crap, show the editor and buttons
     hideModal('#join-modal');
     $("#loader").fadeOut();
@@ -363,6 +372,7 @@ async function joinWorkspace(editorId) {
     $("#editor").fadeIn();
     $("#nav-open").fadeIn();
     $("#join-close").fadeIn();
+    $("#join-modal").removeClass("do-not-hide");
 
     // And finally, focus the editor!      
     editor.focus();
@@ -572,11 +582,31 @@ async function deleteWorkspace() {
     }
 }
 
+function resetPassword() {
+    const email = $('#passreset-email').val();
+    firebase.auth().sendPasswordResetEmail(email);
+    alert(`An email has been sent to ${email} with instructions on how to reset your password`);
+    hideModal('#passreset-modal');
+}
+
 window.addEventListener('DOMContentLoaded', load);
 
 window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
     if (getThemePref() === "AUTO") {
         if (editor) { setEditorTheme(); }
         setUITheme();
+    }
+});
+
+document.addEventListener('keyup', (e) => {
+    if (e.key === 'Escape') {
+        if ($('.modal.active').length > 0) {
+            const target = $('.modal.active')[0];
+            if (!target.classList.contains('do-not-hide')){
+                hideModal(`#${target.id}`);
+            }
+        } else {
+            closeNav();
+        }
     }
 });

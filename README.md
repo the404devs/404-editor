@@ -36,7 +36,7 @@ https://editor.the404.nl
 
 - TODO:
     - Create icon
-    - Password reset UI
+    - Configure display name
 
 ### *2.0.5 (08/17/2023)*
 ------------------------

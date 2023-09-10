@@ -49,7 +49,7 @@
         </p>
     </div>
 
-    <div id="login-modal" class="modal">
+    <div id="login-modal" class="modal do-not-hide">
         <div class="modal-content">
             <div class="modal-header">
                 <h3>404-Editor: Sign in</h3>
@@ -62,6 +62,7 @@
                     <br>
                     <label for="login-pass">Password: </label>
                     <input type="password" id="login-pass" name="login-pass" class="input" onkeypress="function k(e){if (e.keyCode==13)login()} k(event)" required>
+                    <a class="link" onclick="showModal('#passreset-modal')">Forgot password?</a>
                     <br>
                     <br>
                 </form>
@@ -82,8 +83,12 @@
             </div>
             <div class="modal-body">
                 <form id="signup-form">
+                    <label for="signup-username">Username: </label>
+                    <input type="text" id="signup-username" name="signup-username" class="input first-focus" required>
+                    <br>
+                    <br>
                     <label for="signup-email">Email: </label>
-                    <input type="email" id="signup-email" name="signup-email" class="input first-focus" required>
+                    <input type="email" id="signup-email" name="signup-email" class="input" required>
                     <br>
                     <br>
                     <label for="signup-pass">Password: </label>
@@ -99,7 +104,26 @@
         </div>
     </div>
 
-    <div id="join-modal" class="modal">
+    <div id="passreset-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span class="close" onclick="hideModal('#passreset-modal')">×</span>
+                <h3>404-Editor: Reset Password</h3>
+            </div>
+            <div class="modal-body">
+                <form id="passreset-form">
+                    <label for="passreset-email">Enter your email address: </label>
+                    <input type="email" id="passreset-email" name="passreset-email" class="input first-focus" onkeypress="function k(e){if (e.keyCode==13)resetPassword()} k(event)" required>
+                </form>
+                <h4 class="errmsg" id="errmsg-passreset"></h4>
+            </div>
+            <div class="modal-footer">
+                <button class="button" onclick="resetPassword()"><span>Reset Password</span></button>
+            </div>
+        </div>
+    </div>
+
+    <div id="join-modal" class="modal do-not-hide">
         <div class="modal-content">
             <div class="modal-header">
                 <span class="close" onclick="hideModal('#join-modal')" id="join-close">×</span>
