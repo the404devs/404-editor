@@ -13,6 +13,7 @@
     --scrollbar: rgba(21, 24, 36, 0.75);
     --shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
     --shadow-alt: 0 3px 6px rgba(6, 224, 208, 0.5);
+    --err: #f45a5a;
 }
 
 .theme-light {
@@ -30,6 +31,7 @@
     --scrollbar: rgba(21, 24, 36, 0.75);
     --shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
     --shadow-alt: 0 3px 6px rgba(199, 121, 206, 0.5);
+    --err: #f45a5a;
 }
 
 @font-face {
@@ -282,14 +284,20 @@ form {
 
 .close {
     color: var(--text);
-    float: right;
-    font-size: 28px;
+    font-size: 30px;
     font-weight: bold;
+    top: 17px;
+    right: 5px;
+    position: absolute;
+    width: 30px;
+    height: 30px;
+    line-height: 30px;
+    text-align: center;
 }
 
 .close:hover,
 .close:focus {
-    color: var(--theme-alt);
+    color: var(--err);
     text-decoration: none;
     cursor: pointer;
     transition: 0.2s;
@@ -620,7 +628,7 @@ hr {
 
 
 .errmsg {
-    color: #f45a5a;
+    color: var(--err);
     display: block;
     font-size: 14px;
     font-weight: bold;
