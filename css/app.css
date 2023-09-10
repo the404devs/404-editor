@@ -420,12 +420,8 @@ form {
 
 .button:hover:before {
     width: 100%;
-    /* left: 0; */
-    /* right: 0; */
     opacity: 0.5;
-    border-radius: var(--border-radius);
     background-color: var(--theme);
-    /* background: var(--background-gradient); */
 }
 
 .button:hover span:after {
@@ -537,6 +533,7 @@ label {
     font-family: 'Gilroy';
     width: 100%;
     color: var(--text);
+    text-decoration: underline;
 }
 
 label.small-label {
@@ -545,6 +542,7 @@ label.small-label {
     width: auto;
     line-height: 30px;
     margin-right: 20px;
+    text-decoration: none;
 }
 
 hr {
@@ -579,6 +577,7 @@ hr {
     color: var(--text);
     display: block;
     font-size: 18px;
+    text-decoration: underline;
 }
 
 #user-workspace-list li span {
@@ -644,10 +643,10 @@ hr {
 }
 
 .link:after {
-    border-bottom: 2px solid var(--text-alt);
+    border-bottom: 1px solid var(--text-alt);
     bottom: 0;
     content: "";
-    height: 2px;
+    height: 1px;
     left: 0;
     position: absolute;
     transition: all 0.1s;
