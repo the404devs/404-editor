@@ -19,6 +19,19 @@ https://editor.the404.nl
 - 1.2.2
 - 2.0.5
 
+### *3.0.1 (09/14/2023)*
+------------------------
+- We do a little bit of documentation.
+- Can now toggle word wrap in the preferences window.
+- Fixed some issues regarding text fields not being cleared after use.
+- Properly handle a remote user deleting the current workspace.
+- Can now set the language during workspace creation, instead of opening the preferences window and changing it after.
+
+TODO:
+- create icon
+- shareable workspaces
+- profile pictures
+
 ### *3.0.0 (09/09/2023)*
 ------------------------
 - The major rewrite I intended for 2.0.0 to be.
@@ -32,11 +45,6 @@ https://editor.the404.nl
     - Toggle UI between light & dark themes
     - Set preferred colour schemes for light/dark modes.
     - Ability to match system light/dark mode.
-
-
-- TODO:
-    - Create icon
-    - Configure display name
 
 ### *2.0.5 (08/17/2023)*
 ------------------------

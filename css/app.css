@@ -83,7 +83,7 @@ body {
     right: 0;
     left: 0;
     display: none;
-    height: calc(100% - 52px);
+    height: -webkit-fill-available;
     z-index: 10000000;
     border-top: 2px solid var(--border);
     font-family: "Inconsolata" !important;
@@ -241,44 +241,44 @@ form {
 @-webkit-keyframes animatetop {
     from {
         top: -300px;
-        opacity: 0
+        opacity: 0;
     }
     to {
         top: 0;
-        opacity: 1
+        opacity: 1;
     }
 }
 
 @keyframes animatetop {
     from {
         top: -300px;
-        opacity: 0
+        opacity: 0;
     }
     to {
         top: 0;
-        opacity: 1
+        opacity: 1;
     }
 }
 
 @-webkit-keyframes animatebottom {
     from {
         top: 0;
-        opacity: 1
+        opacity: 1;
     }
     to {
         top: -300px;
-        opacity: 0
+        opacity: 0;
     }
 }
 
 @keyframes animatebottom {
     from {
         top: 0;
-        opacity: 1
+        opacity: 1;
     }
     to {
         top: -300px;
-        opacity: 0
+        opacity: 0;
     }
 }
 

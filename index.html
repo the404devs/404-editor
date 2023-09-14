@@ -42,11 +42,7 @@
         <b>Current User:</b>
         <p id="username"></p>
         <hr>
-        <p>
-            404-Editor
-            <br> v3.0.0 (09/09/2023)
-            <br> Owen Bowden
-        </p>
+        <p id="version-info"></p>
     </div>
 
     <div id="login-modal" class="modal do-not-hide">
@@ -145,7 +141,10 @@
                 <h3>404-Editor: Create a Workspace</h3>
             </div>
             <div class="modal-body">
-                <input class="input first-focus" id="id-input" name="id" placeholder="Type name to create workspace."  onkeypress="function k(e){if (e.keyCode==13)createWorkspace()} k(event)" required>
+                <label for="create-id">Workspace Name: </label>
+                <input class="input first-focus" id="create-id" name="create-id" placeholder="Type name to create workspace."  onkeypress="function k(e){if (e.keyCode==13)createWorkspace()} k(event)" required>
+                <label for="create-id">Workspace Language: </label>
+                <select id="create-lang" class="input"></select>
                 <br>
                 <button type="submit" class="button" onclick="createWorkspace()"><span>Create</span></button>
                 <h4 class="errmsg" id="errmsg-create"></h4>
@@ -155,7 +154,6 @@
             </div>
         </div>
     </div>
-
 
     <div id="pref-modal" class="modal">
         <div class="modal-content">
@@ -177,11 +175,13 @@
                 <label for="select-dark-theme">Preferred Dark Colour Scheme: </label>
                 <select id="select-dark-theme" name="select-dark-theme" class="input"></select>
                 <hr>
-                <label>Language: </label>
-                <select id="select-lang" class="input"></select>
+                <label for="select-lang">Language: </label>
+                <select id="select-lang" class="input" name="select-lang"></select>
                 <hr>
-                <label>Editor Font Size (px): </label>
-                <input id="font-size" class="input" type="number" style="width:50px">
+                <label for="font-size">Editor Font Size (px): </label>
+                <input id="font-size" class="input" name="font-size" type="number" style="width:50px">
+                <label for="word-wrap">Wrap Lines: </label>
+                <input id="word-wrap-toggle" class="checkbox" type="checkbox" name="word-wrap">
             </div>
             <div class="modal-footer">
                 <p>Language is synced between all clients.</p>
