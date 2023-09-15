@@ -325,7 +325,7 @@ async function shareWorkspace() {
         
     } catch (error) {
         const errorCode = error.code;
-            const errorMessage = error.message;
+        const errorMessage = error.message;
         console.log("%c" + errorCode + ": " + errorMessage, "color:red;font-weight:bold;font-style:italic;");
         $("#errmsg-share").html(error.message).css("opacity", "1").css("height", "34px");
         setTimeout(() => { $("#errmsg-share").css("opacity", "0"); }, 3000);
@@ -431,13 +431,11 @@ async function fetchSharedWorkspaces() {
             );
         });
 
-        if (shareWorkspaceIds == []) {
+        if (sharedWorkspacesIds == []) {
             $('#shared-workspace-list').append(
                 $('<span>').text('Nothing to show here...')   
             );
         }
-
-        return sharedWorkspacesIds;
         
     } catch (error) {
         console.error('Error getting shared workspaces:', error);

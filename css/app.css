@@ -700,6 +700,7 @@ ul li:hover a.link {
     transition: 0.2s all;
     color: var(--text);
     height: 20px;
+    cursor: pointer;
 }
 
 .tab:hover, .tab.active {
