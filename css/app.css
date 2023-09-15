@@ -83,7 +83,7 @@ body {
     right: 0;
     left: 0;
     display: none;
-    height: -webkit-fill-available;
+    height: calc(100% - 52px);
     z-index: 10000000;
     border-top: 2px solid var(--border);
     font-family: "Inconsolata" !important;
@@ -564,14 +564,14 @@ hr {
     width: 100%;
 }
 
-#user-workspace-list {
+ul {
     text-align: left;
     padding: 0;
     width: 100%;
 }
 
 
-#user-workspace-list li {
+ul li {
     list-style-type: none;
     border: 1px solid var(--border-alt);
     border-radius: var(--border-radius);
@@ -583,30 +583,35 @@ hr {
     cursor: pointer;
 }
 
-#user-workspace-list li:hover {
+ul li:hover {
     transform: scale(1.03);
     box-shadow: var(--shadow-alt);
 }
 
-#user-workspace-list li a {
+ul li a, ul li p {
     color: var(--text);
     display: block;
     font-size: 18px;
     text-decoration: underline;
+    margin: auto;
 }
 
-#user-workspace-list li span {
+ul li span {
     color: var(--text);
     font-family: 'Raleway';
     font-size: 12px;
     display: block;
 }
 
-#user-workspace-list li span:before {
+ul li span.bold {
+    font-weight: bold;
+}
+
+ul li span:before {
     content: "> ";
 }
 
-#user-workspace-list li:hover a.link {
+ul li:hover a.link {
     text-decoration: underline;
 }
 
@@ -671,4 +676,28 @@ hr {
 .link:hover:after {
     visibility: visible;
     width: 100%;
+}
+
+.tabbar {
+    border-bottom: 1px solid var(--border-alt);
+    width: 100%;
+    display: flex;
+    justify-content: space-evenly;
+    align-items: flex-end;
+}
+
+.tab {
+    border: 1px solid var(--border-alt);
+    border-bottom: none;
+    border-radius: var(--border-radius) var(--border-radius) 0 0;
+    /* box-shadow: var(--shadow); */
+    padding: 5px 10px;
+    background: var(--background-transparent);
+    transition: 0.2s all;
+    color: var(--text);
+    height: 20px;
+}
+
+.tab:hover, .tab.active {
+    border-bottom: 4px solid var(--theme);
 }

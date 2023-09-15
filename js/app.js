@@ -18,8 +18,8 @@ firebase.firestore().enablePersistence({
     synchronizeTabs: true
 });
 
-const VER = '3.0.1';
-const DATE = '09/14/2023';
+const VER = '3.1.0';
+const DATE = '09/15/2023';
 const NAME = '404-Editor';
 const AUTHOR = 'Owen Bowden';
 
@@ -31,6 +31,7 @@ let editor;
 let unsubscribe;
 let workspaceName;
 let applyingDeltas = false;
+let isOwner = false;
 const sessionId = Math.random().toString().slice(2);
 const modelist = ace.require("ace/ext/modelist");
 const themelist = ace.require("ace/ext/themelist");
@@ -63,7 +64,7 @@ function getThemePref() {
 }
 
 // Function to determine whether the user's system is in light or dark mode.
-function getAtoTheme() {
+function getAutoTheme() {
     return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? "DARK" : "LIGHT";
 }
 
@@ -121,13 +122,16 @@ function getWordWrap() {
 
 // Function that initializes 404-Editor on page load.
 function init() {
+    // Set the UI to the user's preferred theme.
+    setUITheme();
+
     // Display the version info in the sidebar.
     displayVersionInfo();
     // Load all of the supported languages and available color schemes into the preferences window
     loadAceLangOptions();
     loadAceThemeOptions();
-    // Set the UI to the user's preferred theme.
-    setUITheme();
+
+    showOwnWorkspaces();
 
     // Determine whether a user is already logged in.
     firebase.auth().onAuthStateChanged((user) => {
@@ -155,7 +159,7 @@ function login() {
     firebase.auth().signInWithEmailAndPassword(email, password)
         .then(function() {
             // On a successful login, proceed to post-login setup.
-            postLogin();
+            // postLogin();
         })
         .catch(function(error) {
             // On an unsuccessful login, display an error message to the user.
@@ -225,7 +229,6 @@ function logout() {
     document.title = "404-Editor";
 }
 
-
 // Function to register a new user.
 function signup() {
     const fields = $("#signup-form").serializeArray();
@@ -245,7 +248,16 @@ function signup() {
                 $('#signup-pass').val('');
 
                 // Assign the username the user provided to their profile.
-                firebase.auth().currentUser.updateProfile({displayName: username}).then(function() {
+                firebase.auth().currentUser.updateProfile({displayName: username}).then(async function() {
+                    
+                    const usersSnap = await db.collection('users').doc(user.uid);
+
+                    usersSnap.set({
+                        email: user.email,
+                        name: user.displayName,
+                        creationDate: Date.now().toString()
+                    });
+
                     // Finally, continue with post-login initialization.
                     postLogin();
                 });
@@ -263,6 +275,62 @@ function signup() {
         });
 }
 
+async function getUsernameFromId(id) {
+    const targetUserSnapshot = await db.collection('users').doc(id).get();
+    return targetUserSnapshot.data().name;
+}
+
+async function shareWorkspace() {
+    const targetUserEmail = $('#share-email').val();
+    try {
+        // Get the UID of the target user based on their email
+        const targetUserSnapshot = await db.collection('users').where('email', '==', targetUserEmail).get();
+
+        if (targetUserSnapshot.empty) {
+            console.log('User with provided email not found');
+            return;
+        }
+
+        if (targetUserEmail == user.email) {
+            console.log("Can't share with yourself!");
+            return;
+        }
+
+        const targetUserUid = targetUserSnapshot.docs[0].id;
+
+        // Check if the workspace exists
+        const workspaceRef = db.collection(user.uid).doc(workspaceName);
+        let workspaceSnapshot = await workspaceRef.get();
+
+        if (!workspaceSnapshot.exists) {
+            console.log('Workspace does not exist');
+            return;
+        }
+
+        // Add the target user's UID to the workspace's 'sharedWith' field
+        await workspaceRef.set({
+            sharedWith: firebase.firestore.FieldValue.arrayUnion(targetUserUid)
+        }, { merge: true }).then(async function () {
+            workspaceSnapshot = await workspaceRef.get();
+            getCollaborators(workspaceSnapshot.data().sharedWith);
+        });
+
+        await db.collection('users').doc(targetUserUid).collection('public').doc('sharing').set({
+            sharedOn: firebase.firestore.FieldValue.arrayUnion(`${user.uid}::${workspaceName}`)
+        });
+
+
+        console.log(`Workspace "${workspaceName}" shared with ${targetUserEmail}`);
+
+        // hideModal('#share-modal');
+        $('#share-email').val('');
+        
+    } catch (error) {
+        console.error('Error sharing workspace:', error);
+        // Handle errors (e.g., display an error message to the user)
+    }
+}
+
 // Function to pull a list of the user's workspaces and display them
 async function fetchUserWorkspaces() {
     const workspaces = [];
@@ -276,7 +344,7 @@ async function fetchUserWorkspaces() {
 
     // Sort the array based on the time the workspaces were last modified (most recent first)
     workspaces.sort(function(a, b) {
-        return b.lastUpdated - a.lastUpdated
+        return b.lastUpdated - a.lastUpdated;
     });
 
     // Clear the workspace list UI
@@ -305,13 +373,88 @@ async function fetchUserWorkspaces() {
             ).attr('onclick', `joinWorkspace('${workspace.id}')`)
         );
     });
+
+    fetchSharedWorkspaces();
+}
+
+async function fetchSharedWorkspaces() {
+    console.log('fetching shared workspaces');
+    $('#shared-workspace-list').empty();
+    try {
+        // Query all workspaces where the current user's UID is in the 'sharedWith' array
+        const querySnapshot = await db.collection('users').doc(user.uid).collection('public').doc('sharing').get();
+
+        if (!querySnapshot.exists) {
+            return;
+        }
+
+        const sharedWorkspacesIds = querySnapshot.data().sharedOn || [];
+
+        sharedWorkspacesIds.forEach(async (workspaceId) => {
+            [sharedOwner, sharedName] = workspaceId.split('::', 2);
+            console.log([sharedOwner, sharedName]);
+
+            const sharedWorkspaceSnap = await db.collection(sharedOwner).doc(sharedName).get();
+            const workspace = sharedWorkspaceSnap.data();
+
+            //get username from id
+
+            // Get the timestamp of when this workspace was last modified.
+            const workspaceLastUpdated = new Date(parseInt(workspace.lastUpdated));
+
+            // Generate the HTML list items to append to the list.
+            /*
+                WORKSPACE_NAME
+                > WORKSPACE_LANGUAGE
+                > WORKSPACE_LAST_MODIFIED
+            */
+            // When clicked, each list item is set to call joinWorkspace(id) to then join that particular workspace.
+            $('#shared-workspace-list').append(
+                $("<li>").append(
+                    $("<a>").text(sharedWorkspaceSnap.id)
+                ).append(
+                    $("<span>").text(`Owned by: ${await getUsernameFromId(sharedOwner)}`).addClass('bold')
+                ).append(
+                    $("<span>").text(modelist.modesByName[workspace.lang].caption)
+                ).append(
+                    // I love working with dates in JS
+                    $("<span>").text(`${workspaceLastUpdated.toLocaleDateString()}, ${('0'  + workspaceLastUpdated.getHours()).slice(-2)+':'+('0' + workspaceLastUpdated.getMinutes()).slice(-2)}`)
+                ).attr('onclick', `joinWorkspace('${sharedWorkspaceSnap.id}', '${sharedOwner}')`)
+            );
+        });
+
+        return sharedWorkspacesIds;
+        
+    } catch (error) {
+        console.error('Error getting shared workspaces:', error);
+        // Handle errors (e.g., display an error message to the user)
+        return [];
+    }
+}
+
+function getCollaborators(uidArray) {
+    $('#collaborator-list').empty();
+
+    uidArray.forEach(async uid => {
+        const userSnap = await db.collection('users').doc(uid);
+        const userData = await userSnap.get();
+        // console.log(userData.data().name, userData.data().email);
+
+        $('#collaborator-list').append(
+            $("<li>").append(
+                $("<p>").text(userData.data().name)
+            ).append(
+                $("<span>").text(userData.data().email)
+            )
+        );
+    });
 }
 
 // Function to create a new workspace.
 async function createWorkspace() {
     // Grab the given name of the new workspace
     // Sanitize to prevent HTML injection.
-    const workspaceName = sanitize($('#create-id').val());
+    workspaceName = sanitize($('#create-id').val());
     
     // Grab the language for the preferred workspace.
     const workspaceLang = $('#create-lang').val();
@@ -353,19 +496,33 @@ async function createWorkspace() {
 }
 
 // Function to join a specified workspace.
-async function joinWorkspace(editorId) {
+async function joinWorkspace(editorId, owner = user.uid) {
+    workspaceName = editorId;
+
+    if(owner === user.uid) {
+        console.log("User owns this workspace.");
+        isOwner = true;
+        $('#share-button').show();
+        $('#delete-button').show();
+    } else {
+        console.log("User was shared this workspace.");
+        isOwner = false;
+        $('#share-button').hide();
+        $('#delete-button').hide();
+    }
+
     // Hide the join modal and close the navbar,
     hideModal('#join-modal');
     closeNav();
 
-    // Perform inital setup of the Ace editor.
+    // Perform initial setup of the Ace editor.
     aceSetup(editorId);
 
     // Save the current time. We will use it when listening for changes.
     let lowerBoundTimestamp = Date.now();
     
     // Get a reference to the current document (workspace)
-    docRef = db.collection(user.uid).doc(editorId);
+    docRef = db.collection(owner).doc(editorId);
     
     // Start up the event listener to listen for remote changes and apply them to our local editor.
     unsubscribe = docRef.onSnapshot((doc) => {
@@ -480,11 +637,18 @@ async function joinWorkspace(editorId) {
         // Set the editor language
         editor.session.setMode("ace/mode/" + this.value);
         // Refresh the workspace list
-        fetchUserWorkspaces();
+        // fetchUserWorkspaces();
     });
 
     // Grab the workspace object
     let doc = await docRef.get();
+
+    if (isOwner) {
+        const collaborators = doc.data().sharedWith || [];
+        getCollaborators(collaborators);
+    }
+
+
     // Get the text content of the workspace
     remoteContent = doc.data().content;
 
@@ -746,7 +910,6 @@ async function deleteWorkspace() {
         if (docRef) { unsubscribe(); }
         await docRef.delete();
         console.log(`Deleted workspace ${workspaceName}`);
-        // fetchUserWorkspaces();
         location.reload();
     }
 }
@@ -766,6 +929,20 @@ function resetPassword() {
 // Function to show the version info in the sidebar
 function displayVersionInfo() {
     $('#version-info').html(`${NAME}<br>v${VER} (${DATE})<br>${AUTHOR}`);
+}
+
+function showOwnWorkspaces() {
+    $('#tab-owned').addClass('active');
+    $('#tab-shared').removeClass('active');
+    $('#shared-workspace-list').hide();
+    $('#user-workspace-list').show();
+}
+
+function showSharedWorkspaces() {
+    $('#tab-shared').addClass('active');
+    $('#tab-owned').removeClass('active');
+    $('#user-workspace-list').hide();
+    $('#shared-workspace-list').show();
 }
 
 // Run initialization on page load.

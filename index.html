@@ -33,14 +33,15 @@
         <a onclick="closeNav()"><i class="fas fa-times"></i> Close</a>
         <a href="https://the404.nl"><i class="fas fa-home"></i> The404 Home</a>
         <a onclick="showModal('#join-modal')"><i class="fas fa-sign-in"></i> Join Workspace</a>
+        <a onclick="showModal('#share-modal')" id="share-button"><i class="fas fa-share"></i> Share Workspace</a>
         <a onclick="downloadWorkspace()"><i class="fas fa-download"></i> Download</a>
-        <a onclick="deleteWorkspace()"><i class="fas fa-trash"></i> Delete Workspace</a>
+        <a onclick="deleteWorkspace()" id="delete-button"><i class="fas fa-trash"></i> Delete Workspace</a>
         <a onclick="showModal('#pref-modal')"><i class="fas fa-cog"></i> Preferences</a>
         <a href="https://github.com/the404devs/404-editor" target="_blank"><i class="fab fa-github"></i> Source (GitHub)</a>
-        <a onclick="logout()"><i class="fas fa-sign-out"></i> Log Out</a>
         <hr>
         <b>Current User:</b>
         <p id="username"></p>
+        <a onclick="logout()"><i class="fas fa-sign-out"></i> Log Out</a>
         <hr>
         <p id="version-info"></p>
     </div>
@@ -126,7 +127,12 @@
                 <h3>404-Editor: Join or Create a Workspace</h3>
             </div>
             <div class="modal-body">
+                <div class="tabbar">
+                    <span class="tab active" id="tab-owned" onclick="showOwnWorkspaces()">My Workspaces</span>
+                    <span class="tab" id="tab-shared" onclick="showSharedWorkspaces()">Shared with Me</span>
+                </div>
                 <ul id="user-workspace-list"></ul>
+                <ul id="shared-workspace-list"></ul>
             </div>
             <div class="modal-footer">
                 <button class="button" onclick="showModal('#create-modal')"><span>New Workspace</span></button>
@@ -151,6 +157,27 @@
             </div>
             <div class="modal-footer">
                 <p>If no workspace with the name exists, a new one will be created.</p>
+            </div>
+        </div>
+    </div>
+
+    <div id="share-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span class="close" onclick="hideModal('#share-modal')">×</span>
+                <h3>404-Editor: Share a Workspace</h3>
+            </div>
+            <div class="modal-body">
+                <label for="share-email">User Email: </label>
+                <input type="email" id="share-email" name="share-email" class="input first-focus" required onkeypress="function k(e){if (e.keyCode==13)shareWorkspace()} k(event)">
+                <br>
+                <button type="submit" class="button" onclick="shareWorkspace()"><span>Add Collaborator</span></button>
+                <h4 class="errmsg" id="errmsg-share"></h4>
+                <hr>
+                <label>Shared with:</label>
+                <ul id="collaborator-list"></ul>
+            </div>
+            <div class="modal-footer">
             </div>
         </div>
     </div>

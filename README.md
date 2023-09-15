@@ -19,6 +19,23 @@ https://editor.the404.nl
 - 1.2.2
 - 2.0.5
 
+### *3.1.0 (09/15/2023)*
+------------------------
+- Added ability to share workspaces with other users
+    - Only the owner of a workspace can:
+        - Add collaborators
+        - Delete the workspace
+    - All collaborators can:
+        - Edit the content of the workspace
+        - Change the workspace's language
+- Shared workspaces are listed under a separate tab in the 'Join Workspace' menu.
+- The 'Share Workspace' and 'Delete Workspace' menu options will only appear for the owner of the workspace.
+
+TODO:
+- create icon
+- profile pictures
+- remove sharedOn entries when deleting workspace
+
 ### *3.0.1 (09/14/2023)*
 ------------------------
 - We do a little bit of documentation.
@@ -26,11 +43,6 @@ https://editor.the404.nl
 - Fixed some issues regarding text fields not being cleared after use.
 - Properly handle a remote user deleting the current workspace.
 - Can now set the language during workspace creation, instead of opening the preferences window and changing it after.
-
-TODO:
-- create icon
-- shareable workspaces
-- profile pictures
 
 ### *3.0.0 (09/09/2023)*
 ------------------------
