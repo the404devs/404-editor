@@ -376,8 +376,7 @@ async function fetchUserWorkspaces() {
             ).attr('onclick', `joinWorkspace('${workspace.id}')`)
         );
     });
-
-    if (workspaces == []) {
+    if (workspaces.length == 0) {
         $('#user-workspace-list').append(
             $('<span>').text('Nothing to show here...')   
         );    
@@ -393,19 +392,19 @@ async function fetchSharedWorkspaces() {
         const querySnapshot = await db.collection('users').doc(user.uid).collection('public').doc('sharing').get();
 
         if (!querySnapshot.exists) {
-            return;
+            $('#shared-workspace-list').append(
+                $('<span>').text('Nothing to show here...')   
+            );
         }
 
         const sharedWorkspacesIds = querySnapshot.data().sharedOn || [];
 
         sharedWorkspacesIds.forEach(async (workspaceId) => {
             [sharedOwner, sharedName] = workspaceId.split('::', 2);
-            console.log([sharedOwner, sharedName]);
+            // console.log([sharedOwner, sharedName]);
 
             const sharedWorkspaceSnap = await db.collection(sharedOwner).doc(sharedName).get();
             const workspace = sharedWorkspaceSnap.data();
-
-            //get username from id
 
             // Get the timestamp of when this workspace was last modified.
             const workspaceLastUpdated = new Date(parseInt(workspace.lastUpdated));
@@ -431,7 +430,8 @@ async function fetchSharedWorkspaces() {
             );
         });
 
-        if (sharedWorkspacesIds == []) {
+        console.log($('#shared-workspace-list').children().length);
+        if (sharedWorkspacesIds.length == 0) {
             $('#shared-workspace-list').append(
                 $('<span>').text('Nothing to show here...')   
             );
