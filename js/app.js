@@ -287,13 +287,11 @@ async function shareWorkspace() {
         const targetUserSnapshot = await db.collection('users').where('email', '==', targetUserEmail).get();
 
         if (targetUserSnapshot.empty) {
-            console.log('User with provided email not found');
-            return;
+            throw Error('User with provided email not found.');
         }
 
         if (targetUserEmail == user.email) {
-            console.log("Can't share with yourself!");
-            return;
+            throw Error("You can't share a workspace with yourself!");
         }
 
         const targetUserUid = targetUserSnapshot.docs[0].id;
@@ -326,8 +324,13 @@ async function shareWorkspace() {
         $('#share-email').val('');
         
     } catch (error) {
-        console.error('Error sharing workspace:', error);
-        // Handle errors (e.g., display an error message to the user)
+        const errorCode = error.code;
+            const errorMessage = error.message;
+        console.log("%c" + errorCode + ": " + errorMessage, "color:red;font-weight:bold;font-style:italic;");
+        $("#errmsg-share").html(error.message).css("opacity", "1").css("height", "34px");
+        setTimeout(() => { $("#errmsg-share").css("opacity", "0"); }, 3000);
+        setTimeout(() => { $("#errmsg-share").css("height", "0"); }, 3000);
+        setTimeout(() => { $("#errmsg-share").html(""); }, 3000);
     }
 }
 
@@ -374,11 +377,16 @@ async function fetchUserWorkspaces() {
         );
     });
 
+    if (workspaces == []) {
+        $('#user-workspace-list').append(
+            $('<span>').text('Nothing to show here...')   
+        );    
+    }
+
     fetchSharedWorkspaces();
 }
 
 async function fetchSharedWorkspaces() {
-    console.log('fetching shared workspaces');
     $('#shared-workspace-list').empty();
     try {
         // Query all workspaces where the current user's UID is in the 'sharedWith' array
@@ -422,6 +430,12 @@ async function fetchSharedWorkspaces() {
                 ).attr('onclick', `joinWorkspace('${sharedWorkspaceSnap.id}', '${sharedOwner}')`)
             );
         });
+
+        if (shareWorkspaceIds == []) {
+            $('#shared-workspace-list').append(
+                $('<span>').text('Nothing to show here...')   
+            );
+        }
 
         return sharedWorkspacesIds;
         

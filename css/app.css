@@ -570,6 +570,10 @@ ul {
     width: 100%;
 }
 
+ul span {
+    color: var(--border-alt);
+}
+
 
 ul li {
     list-style-type: none;
