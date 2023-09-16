@@ -35,6 +35,7 @@ TODO:
 - create icon
 - profile pictures
 - remove sharedOn entries when deleting workspace
+- init private/public collection on user creation
 
 ### *3.0.1 (09/14/2023)*
 ------------------------

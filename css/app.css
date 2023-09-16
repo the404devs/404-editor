@@ -692,7 +692,7 @@ ul li:hover a.link {
 
 .tab {
     border: 1px solid var(--border-alt);
-    border-bottom: none;
+    border-bottom: 0px solid var(--border-alt);
     border-radius: var(--border-radius) var(--border-radius) 0 0;
     /* box-shadow: var(--shadow); */
     padding: 5px 10px;
