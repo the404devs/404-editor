@@ -741,6 +741,7 @@ ul li:hover a.link {
     right: 0;
     top: 0;
     bottom: 0;
+    background-color: var(--background-transparent);
     object-fit: cover;
 }
 
