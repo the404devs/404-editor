@@ -19,6 +19,19 @@ https://editor.the404.nl
 - 1.2.2
 - 2.0.5
 
+### *3.1.1 (09/20/2023)*
+------------------------
+- Added user profile pictures!
+    - Profile settings have moved to a new menu on the right-hand side, click the profile picture display in the top-right corner to access it.
+    - Can set your username and profile picture from this menu.
+
+TODO:
+- create icon
+- remove sharedOn entries when deleting workspace
+    - currently just being ignored
+- init private/public collection on user creation
+- add password-change form to profile settings
+
 ### *3.1.0 (09/15/2023)*
 ------------------------
 - Added ability to share workspaces with other users
@@ -31,11 +44,6 @@ https://editor.the404.nl
 - Shared workspaces are listed under a separate tab in the 'Join Workspace' menu.
 - The 'Share Workspace' and 'Delete Workspace' menu options will only appear for the owner of the workspace.
 
-TODO:
-- create icon
-- profile pictures
-- remove sharedOn entries when deleting workspace
-- init private/public collection on user creation
 
 ### *3.0.1 (09/14/2023)*
 ------------------------

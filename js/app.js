@@ -18,8 +18,8 @@ firebase.firestore().enablePersistence({
     synchronizeTabs: true
 });
 
-const VER = '3.1.0';
-const DATE = '09/15/2023';
+const VER = '3.1.1';
+const DATE = '09/20/2023';
 const NAME = '404-Editor';
 const AUTHOR = 'Owen Bowden';
 
@@ -30,11 +30,12 @@ let docRef;
 let editor;
 let unsubscribe;
 let workspaceName;
-let applyingDeltas = false;
 let isOwner = false;
+let applyingDeltas = false;
 const sessionId = Math.random().toString().slice(2);
 const modelist = ace.require("ace/ext/modelist");
 const themelist = ace.require("ace/ext/themelist");
+const storage = firebase.storage().ref();
 
 // Local storage keys for preferences
 const LS_DARK_THEME_KEY = "editor-dark-theme";
@@ -44,7 +45,7 @@ const EDITOR_FONT_SIZE = "editor-font-size";
 const EDITOR_WORD_WRAP = "editor-word-wrap";
 
 // Initial text to populate new editors with
-const initialContent = `# Welcome to 404-Editor v3.0.0!`;
+const initialContent = `# Welcome to 404-Editor v${VER}!`;
 const initialLang = 'markdown';
 
 // Function to grab the user's preferred light theme from local storage
@@ -185,8 +186,11 @@ function postLogin() {
     user = firebase.auth().currentUser;
     console.log(user.uid);
 
+    // fillPFP(user.uid, document.getElementById('user-pfp'));
+    fetchUserPFP();
+
     // Display their username in the sidebar.
-    $('#username').text(user.displayName);
+    fetchUserDisplayName();
 
     // Fetch all of the user's workspaces, and display the list to the user.
     fetchUserWorkspaces().then(function () {
@@ -199,8 +203,9 @@ function logout() {
     // Log them out of Firebase
     firebase.auth().signOut();
 
-    // Close the nav menu
-    closeNav();
+    // Close the nav menus
+    closeNav('navbox');
+    closeNav('userbox');
     
     // Show the login modal, the welcome text, and the loader icon
     showModal('#login-modal');
@@ -210,7 +215,6 @@ function logout() {
     // Hide the header, editor, and menu button
     $(".header").fadeOut();
     $("#editor").fadeOut();
-    $("#nav-open").fadeOut();
 
     // Hide the join modal and set it to do-not-hide mode.
     $("#join-close").fadeOut();
@@ -221,8 +225,12 @@ function logout() {
     // Clear event listener on the Firebase document (remote changes)
     if (docRef) { unsubscribe(); }
 
+    $('#user-pfp').attr('src', '');
+    $('#user-pfp-menu').attr('src', '');
+
     // Clear the username display on the sidebar
     $('#username').text('');
+    $('#user-displayname').val('');
 
     // Clear the workspace name in the header and page title
     $("#workspace-name").html("<b>Workspace:</b> "); 
@@ -317,12 +325,7 @@ async function shareWorkspace() {
             sharedOn: firebase.firestore.FieldValue.arrayUnion(`${user.uid}::${workspaceName}`)
         });
 
-
-        console.log(`Workspace "${workspaceName}" shared with ${targetUserEmail}`);
-
-        // hideModal('#share-modal');
-        $('#share-email').val('');
-        
+        console.log(`Workspace "${workspaceName}" shared with ${targetUserEmail}`);        
     } catch (error) {
         const errorCode = error.code;
         const errorMessage = error.message;
@@ -332,6 +335,7 @@ async function shareWorkspace() {
         setTimeout(() => { $("#errmsg-share").css("height", "0"); }, 3000);
         setTimeout(() => { $("#errmsg-share").html(""); }, 3000);
     }
+    $('#share-email').val('');
 }
 
 // Function to pull a list of the user's workspaces and display them
@@ -369,10 +373,10 @@ async function fetchUserWorkspaces() {
             $("<li>").append(
                 $("<a>").text(workspace.id)
             ).append(
-                $("<span>").text(modelist.modesByName[workspace.lang].caption)
+                $("<span>").addClass('details').text(modelist.modesByName[workspace.lang].caption)
             ).append(
                 // I love working with dates in JS
-                $("<span>").text(`${workspaceLastUpdated.toLocaleDateString()}, ${('0'  + workspaceLastUpdated.getHours()).slice(-2)+':'+('0' + workspaceLastUpdated.getMinutes()).slice(-2)}`)
+                $("<span>").addClass('details').text(`${workspaceLastUpdated.toLocaleDateString()}, ${('0'  + workspaceLastUpdated.getHours()).slice(-2)+':'+('0' + workspaceLastUpdated.getMinutes()).slice(-2)}`)
             ).attr('onclick', `joinWorkspace('${workspace.id}')`)
         );
     });
@@ -398,39 +402,44 @@ async function fetchSharedWorkspaces() {
         }
 
         const sharedWorkspacesIds = querySnapshot.data().sharedOn || [];
+        // console.log(sharedWorkspacesIds);
 
         sharedWorkspacesIds.forEach(async (workspaceId) => {
             [sharedOwner, sharedName] = workspaceId.split('::', 2);
-            // console.log([sharedOwner, sharedName]);
-
-            const sharedWorkspaceSnap = await db.collection(sharedOwner).doc(sharedName).get();
-            const workspace = sharedWorkspaceSnap.data();
-
-            // Get the timestamp of when this workspace was last modified.
-            const workspaceLastUpdated = new Date(parseInt(workspace.lastUpdated));
-
-            // Generate the HTML list items to append to the list.
-            /*
-                WORKSPACE_NAME
-                > WORKSPACE_LANGUAGE
-                > WORKSPACE_LAST_MODIFIED
-            */
-            // When clicked, each list item is set to call joinWorkspace(id) to then join that particular workspace.
-            $('#shared-workspace-list').append(
-                $("<li>").append(
-                    $("<a>").text(sharedWorkspaceSnap.id)
-                ).append(
-                    $("<span>").text(`Owned by: ${await getUsernameFromId(sharedOwner)}`).addClass('bold')
-                ).append(
-                    $("<span>").text(modelist.modesByName[workspace.lang].caption)
-                ).append(
-                    // I love working with dates in JS
-                    $("<span>").text(`${workspaceLastUpdated.toLocaleDateString()}, ${('0'  + workspaceLastUpdated.getHours()).slice(-2)+':'+('0' + workspaceLastUpdated.getMinutes()).slice(-2)}`)
-                ).attr('onclick', `joinWorkspace('${sharedWorkspaceSnap.id}', '${sharedOwner}')`)
-            );
+            
+            try {
+                const sharedWorkspaceSnap = await db.collection(sharedOwner).doc(sharedName).get();
+                const workspace = sharedWorkspaceSnap.data();
+    
+                // Get the timestamp of when this workspace was last modified.
+                const workspaceLastUpdated = new Date(parseInt(workspace.lastUpdated));
+    
+                // Generate the HTML list items to append to the list.
+                /*
+                    WORKSPACE_NAME
+                    > WORKSPACE_LANGUAGE
+                    > WORKSPACE_LAST_MODIFIED
+                */
+                // When clicked, each list item is set to call joinWorkspace(id) to then join that particular workspace.
+                $('#shared-workspace-list').append(
+                    $("<li>").append(
+                        $("<a>").text(sharedWorkspaceSnap.id)
+                    ).append(
+                        $("<span>").addClass('details').text(`Owned by: ${await getUsernameFromId(sharedOwner)}`).addClass('bold')
+                    ).append(
+                        $("<span>").addClass('details').text(modelist.modesByName[workspace.lang].caption)
+                    ).append(
+                        // I love working with dates in JS
+                        $("<span>").addClass('details').text(`${workspaceLastUpdated.toLocaleDateString()}, ${('0'  + workspaceLastUpdated.getHours()).slice(-2)+':'+('0' + workspaceLastUpdated.getMinutes()).slice(-2)}`)
+                    ).attr('onclick', `joinWorkspace('${sharedWorkspaceSnap.id}', '${sharedOwner}')`)
+                );
+            } catch (error) {
+                console.log(`Couldn't access: ${workspaceId}, removing from list.`);
+            }
+            
         });
 
-        console.log($('#shared-workspace-list').children().length);
+        // console.log($('#shared-workspace-list').children().length);
         if (sharedWorkspacesIds.length == 0) {
             $('#shared-workspace-list').append(
                 $('<span>').text('Nothing to show here...')   
@@ -452,11 +461,22 @@ function getCollaborators(uidArray) {
         const userData = await userSnap.get();
         // console.log(userData.data().name, userData.data().email);
 
+        const pfpURL = await fetchOtherUserPFP(uid);
+        // console.log(pfpURL);
+
         $('#collaborator-list').append(
             $("<li>").append(
-                $("<p>").text(userData.data().name)
+                $("<span>").addClass('pfp-container').append(
+                    $("<i>").addClass('fas fa-user')
+                ).append(
+                    $("<img>").addClass('pfp').attr('src', pfpURL)
+                )
             ).append(
-                $("<span>").text(userData.data().email)
+                $("<div>").addClass('info').append(
+                    $("<p>").text(userData.data().name)
+                ).append(
+                    $("<span>").addClass('details').text(userData.data().email)
+                )
             )
         );
     });
@@ -525,7 +545,7 @@ async function joinWorkspace(editorId, owner = user.uid) {
 
     // Hide the join modal and close the navbar,
     hideModal('#join-modal');
-    closeNav();
+    closeNav('navbox');
 
     // Perform initial setup of the Ace editor.
     aceSetup(editorId);
@@ -674,7 +694,6 @@ async function joinWorkspace(editorId, owner = user.uid) {
     $(".welcome").fadeOut();
     $(".header").fadeIn();
     $("#editor").fadeIn();
-    $("#nav-open").fadeIn();
     $("#join-close").fadeIn();
     $("#join-modal").removeClass("do-not-hide");
 
@@ -799,13 +818,13 @@ function sanitize(str) {
 }
 
 // Function to open the navigation menu
-function openNav() {
-    document.getElementById("navbox").style.width = "250px";
+function openNav(id) {
+    document.getElementById(id).style.width = "250px";
 }
 
 // Function to close the navigation menu
-function closeNav() {
-    document.getElementById("navbox").style.width = "0";
+function closeNav(id) {
+    document.getElementById(id).style.width = "0";
 }
 
 // Function to mark any currently 'active' modals as 'inactive'
@@ -957,6 +976,68 @@ function showSharedWorkspaces() {
     $('#shared-workspace-list').show();
 }
 
+function fetchUserDisplayName() {
+    $('#username').text(user.displayName);
+    $('#user-displayname').val(user.displayName);
+}
+
+async function setUserDisplayName(){
+    const newName = sanitize($('#user-displayname').val());
+    if (newName !== user.displayName && newName){
+        user.updateProfile({displayName: newName}).then(() => {
+            fetchUserDisplayName();
+        });
+
+        const usersSnap = await db.collection('users').doc(user.uid);
+
+        usersSnap.update({
+            name: newName,
+        });
+    }
+}
+
+async function setUserPFP(){
+    const pfpFile = document.getElementById('pfp-upload').files[0];
+    if (pfpFile) {
+        const userPicRef = storage.child(`user-profile-images/${user.uid}`);
+        console.log(pfpFile);
+        console.log(userPicRef);
+    
+        userPicRef.put(pfpFile).then(() => {
+            userPicRef.getDownloadURL().then((url) => {
+                user.updateProfile({photoURL: url}).then(() => {
+                    fetchUserPFP();
+                });
+            });
+        });
+    }
+}
+
+async function fetchOtherUserPFP(uid) {
+    const userPicRef = storage.child(`user-profile-images/${uid}`);
+    const url = await userPicRef.getDownloadURL().catch(function(error) {
+        // console.log("User has no profile picture.");
+    });
+
+    if (url) {
+        const tokenlessURL = url.split('&token')[0];
+        return tokenlessURL;
+    } else {
+        return '';
+    }
+}
+
+function fetchUserPFP() {
+    $('#user-pfp').attr('src', user.photoURL);
+    $('#user-pfp-menu').attr('src', user.photoURL);
+}
+
+function updateProfile() {
+    setUserPFP();
+    setUserDisplayName();
+    hideModal('#profile-modal');
+}
+
 // Run initialization on page load.
 window.addEventListener('DOMContentLoaded', init);
 
@@ -977,7 +1058,7 @@ document.addEventListener('keyup', (e) => {
                 hideModal(`#${target.id}`);
             }
         } else {
-            closeNav();
+            closeNav('navbox');
         }
     }
 });

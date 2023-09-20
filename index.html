@@ -13,37 +13,57 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-storage.js"></script>
 </head>
 
 <body>
     <h2 class="welcome">Welcome to 404-Editor!</h2>
     <div class="header">
+        <span id="nav-open" class="menu-open-button" onclick="openNav('navbox')"><i class="fas fa-bars"></i></span>
         <div id="workspace-name">
             <b>Workspace:</b>
         </div>
-        <div class="logo"><b>404-Editor</b>
+        <div class="logo">
+            <b>404-Editor</b>
         </div>
+        <span id="user-open" class="menu-open-button" onclick="openNav('userbox')">
+            <i class="fas fa-user"></i>
+            <img id="user-pfp" class="pfp" onclick="openNav('userbox')">
+        </span>
+        
     </div>
 
     <div id="editor"></div>
     <div id="loader"></div>
 
-    <span id="nav-open" style="font-size:30px;cursor:pointer" onclick="openNav()"><i class="fas fa-bars"></i></span>
     <div id="navbox" class="sidenav">
-        <a onclick="closeNav()"><i class="fas fa-times"></i> Close</a>
-        <a href="https://the404.nl"><i class="fas fa-home"></i> The404 Home</a>
+        <a onclick="closeNav('navbox')"><i class="fas fa-times"></i> Close</a>
+        <hr>
         <a onclick="showModal('#join-modal')"><i class="fas fa-sign-in"></i> Join Workspace</a>
         <a onclick="showModal('#share-modal')" id="share-button"><i class="fas fa-share-alt"></i> Share Workspace</a>
         <a onclick="downloadWorkspace()"><i class="fas fa-download"></i> Download</a>
         <a onclick="deleteWorkspace()" id="delete-button"><i class="fas fa-trash"></i> Delete Workspace</a>
         <a onclick="showModal('#pref-modal')"><i class="fas fa-cog"></i> Preferences</a>
-        <a href="https://github.com/the404devs/404-editor" target="_blank"><i class="fab fa-github"></i> Source (GitHub)</a>
-        <hr>
-        <b>Current User:</b>
-        <p id="username"></p>
-        <a onclick="logout()"><i class="fas fa-sign-out"></i> Log Out</a>
+        <a href="https://the404.nl"><i class="fas fa-home"></i> The404 Home</a>
+        <a href="https://github.com/the404devs/404-editor" target="_blank"><i class="fab fa-github"></i> Source Code</a>
         <hr>
         <p id="version-info"></p>
+    </div>
+
+
+    <div id="userbox" class="sidenav right">
+        <a onclick="closeNav('userbox')"><i class="fas fa-times"></i> Close</a>
+        <hr>
+        <b>Current User:</b>
+        <a class="user-display" onclick="showModal('#profile-modal')">
+            <span class="pfp-container">
+                <i class="fas fa-user"></i>
+                <img id="user-pfp-menu" class="pfp">
+            </span>
+            <p id="username"></p>
+        </a>
+        <hr>
+        <a onclick="logout()"><i class="fas fa-sign-out"></i> Log Out</a>
     </div>
 
     <div id="login-modal" class="modal do-not-hide">
@@ -169,7 +189,7 @@
             </div>
             <div class="modal-body">
                 <label for="share-email">User Email: </label>
-                <input type="email" id="share-email" name="share-email" class="input first-focus" required onkeypress="function k(e){if (e.keyCode==13)shareWorkspace()} k(event)">
+                <input type="email" id="share-email" name="share-email" class="input first-focus" placeholder="Enter email to add collaborator..." required onkeypress="function k(e){if (e.keyCode==13)shareWorkspace()} k(event)">
                 <br>
                 <button type="submit" class="button" onclick="shareWorkspace()"><span>Add Collaborator</span></button>
                 <h4 class="errmsg" id="errmsg-share"></h4>
@@ -212,6 +232,24 @@
             </div>
             <div class="modal-footer">
                 <p>Language is synced between all clients.</p>
+            </div>
+        </div>
+    </div>
+
+    <div id="profile-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span class="close" onclick="hideModal('#profile-modal')">×</span>
+                <h3>My Profile</h3>
+            </div>
+            <div class="modal-body">
+                <label for="font-size">Username: </label>
+                <input id="user-displayname" class="input" name="user-displayname" type="text" required>
+                <label for="pfp-upload">Change Profile Picture: </label>
+                <input id="pfp-upload" class="input" name="pfp-upload" type="file" multiple="false">
+            </div>
+            <div class="modal-footer">
+                <button class="button" onclick="updateProfile()"><span>Save Changes</span></button>
             </div>
         </div>
     </div>

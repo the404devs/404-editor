@@ -70,6 +70,7 @@ body {
 
 .header {
     top: 0;
+    left: 0;
     position: fixed;
     height: 48px;
     width: 100%;
@@ -91,15 +92,14 @@ body {
 
 #workspace-name {
     position: absolute;
-    padding-top: 10px;
-    padding-left: 80px;
+    top: 10px;
+    left: 80px;
     color: var(--text);
     font-family: "Gilroy Light";
     font-size: 1.65em;
-    margin-bottom: 10px;
     text-shadow: none;
     overflow-x: hidden;
-    left: 0;
+    margin: auto;
 }
 
 #workspace-name b {
@@ -111,18 +111,17 @@ body {
 
 .logo {
     position: absolute;
-    padding-top: 10px;
-    padding-right: 80px;
+    top: 10px;
+    right: 80px;
     color: var(--text);
     font-family: "Gilroy Light";
     font-size: 1.9em;
-    margin-bottom: 10px;
     text-shadow: none;
     vertical-align: -1px;
     font-family: "Camaraderie";
-    right: 0;
     overflow-x: hidden;
     text-rendering: geometricPrecision;
+    margin: auto;
 }
 
 form {
@@ -462,7 +461,14 @@ form {
     border-right: 2px solid var(--border);
 }
 
-.sidenav a {
+.sidenav.right {
+    left: unset;
+    right: 0;
+    border-left: 2px solid var(--border);
+    border-right: none;
+}
+
+.sidenav > a {
     color: var(--text);
     padding: 16px;
     text-decoration: none;
@@ -472,14 +478,14 @@ form {
     cursor: pointer;
 }
 
-.sidenav a:hover {
+.sidenav > a:hover {
     color: var(--text-alt);
     background-color: var(--theme);
     transition: 0.5s;
     border-radius: 50px;
 }
 
-.sidenav p {
+.sidenav > p, .sidenav > div {
     color: var(--text);
     padding: 16px;
     display: block;
@@ -488,11 +494,12 @@ form {
     padding-top: 0;
 }
 
-.sidenav p#username {
+.sidenav > .user-display > p#username {
     font-size: 16px;
+    margin: 0 0 0 10px;
 }
 
-.sidenav b {
+.sidenav > b {
     font-family: 'Gilroy';
     font-size: 18px;
     color: var(--text);
@@ -514,25 +521,31 @@ form {
     transform: translateX(2px);
 }
 
-#nav-open {
+.menu-open-button {
     color: var(--text);
-    position: fixed;
-    width: 37px;
-    height: 37px;
+    position: absolute;
+    width: 38px;
+    height: 38px;
     text-align: center;
     top: 5px;
     left: 10px;
-    display: none;
+    transition: 0.15s;
+    cursor:pointer;
+    font-size: 30px;
 }
 
-#nav-open:hover {
+.menu-open-button#user-open {
+    right: 10px;
+    left: unset;
+}
+
+.menu-open-button:hover {
     color: var(--text-alt);
     background-color: var(--theme);
-    transition: 0.5s;
-    border-radius: 50px;
+    border-radius: 50%;
 }
 
-#nav-open i {
+.menu-open-button i {
     font-size: 20px;
     padding: 0;
     vertical-align: 1px;
@@ -587,6 +600,17 @@ ul li {
     cursor: pointer;
 }
 
+ul#collaborator-list li {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+}
+
+ul#collaborator-list li .info {
+    margin-left: 15px;
+} 
+
 ul li:hover {
     transform: scale(1.03);
     box-shadow: var(--shadow-alt);
@@ -600,18 +624,18 @@ ul li a, ul li p {
     margin: auto;
 }
 
-ul li span {
+ul li .details {
     color: var(--text);
     font-family: 'Raleway';
     font-size: 12px;
     display: block;
 }
 
-ul li span.bold {
+ul li .details.bold {
     font-weight: bold;
 }
 
-ul li span:before {
+ul li .details:before {
     content: "> ";
 }
 
@@ -705,4 +729,44 @@ ul li:hover a.link {
 
 .tab:hover, .tab.active {
     border-bottom: 4px solid var(--theme);
+}
+
+.pfp {
+    width: 38px;
+    height: 38px;
+    border: 1px solid var(--border);
+    border-radius: 50%;
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+}
+
+.pfp:not([src]), .pfp[src=''] {
+    opacity: 0;
+}
+
+.pfp-container {
+    position: relative;
+    display: inline-block;
+    /* width: 38px; */
+    /* height: 38px; */
+    text-align: center;
+    color: var(--text);
+    font-size: 30px;
+}
+
+.pfp-container i {
+    font-size: 20px;
+    width: 38px;
+    height: 38px;
+    display: block;
+    line-height: 38px;
+}
+
+.sidenav > .user-display {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
 }
