@@ -649,9 +649,9 @@ async function joinWorkspace(editorId, owner = user.uid) {
             { content: newContent, queue: updateData, lastUpdated: timestamp },
             { merge: true }
         )
-        .then(() => {
-            console.log('Document successfully updated!');
-        })
+        // .then(() => {
+        //     console.log('Document successfully updated!');
+        // })
         .catch((error) => {
             console.error('Error updating document:', error);
         });
