@@ -19,16 +19,16 @@
 <body>
     <h2 class="welcome">Welcome to 404-Editor!</h2>
     <div class="header">
-        <span id="nav-open" class="menu-open-button" onclick="openNav('navbox')"><i class="fas fa-bars"></i></span>
+        <span id="nav-open" class="menu-open-button" onclick="openNav('#navbox')"><i class="fas fa-bars"></i></span>
         <div id="workspace-name">
             <b>Workspace:</b>
         </div>
         <div class="logo">
             <b>404-Editor</b>
         </div>
-        <span id="user-open" class="menu-open-button" onclick="openNav('userbox')">
+        <span id="user-open" class="menu-open-button" onclick="openNav('#userbox')">
             <i class="fas fa-user"></i>
-            <img id="user-pfp" class="pfp" onclick="openNav('userbox')">
+            <img id="user-pfp" class="pfp">
         </span>
         
     </div>
@@ -37,22 +37,22 @@
     <div id="loader"></div>
 
     <div id="navbox" class="sidenav">
-        <a onclick="closeNav('navbox')"><i class="fas fa-times"></i> Close</a>
+        <a onclick="closeNav('#navbox')"><i class="fas fa-times"></i>Close</a>
         <hr>
-        <a onclick="showModal('#join-modal')"><i class="fas fa-sign-in"></i> Join Workspace</a>
-        <a onclick="showModal('#share-modal')" id="share-button"><i class="fas fa-share-alt"></i> Share Workspace</a>
-        <a onclick="downloadWorkspace()"><i class="fas fa-download"></i> Download</a>
-        <a onclick="deleteWorkspace()" id="delete-button"><i class="fas fa-trash"></i> Delete Workspace</a>
-        <a onclick="showModal('#pref-modal')"><i class="fas fa-cog"></i> Preferences</a>
-        <a href="https://the404.nl"><i class="fas fa-home"></i> The404 Home</a>
-        <a href="https://github.com/the404devs/404-editor" target="_blank"><i class="fab fa-github"></i> Source Code</a>
+        <a onclick="showModal('#join-modal')"><i class="fas fa-sign-in"></i>Join Workspace</a>
+        <a onclick="showModal('#share-modal')" id="share-button"><i class="fas fa-share-alt"></i>Share Workspace</a>
+        <a onclick="downloadWorkspace()"><i class="fas fa-download"></i>Download</a>
+        <a onclick="deleteWorkspace()" id="delete-button"><i class="fas fa-trash"></i>Delete Workspace</a>
+        <a onclick="showModal('#pref-modal')"><i class="fas fa-cog"></i>Preferences</a>
         <hr>
+        <a href="https://the404.nl"><i class="fas fa-home"></i>The404 Home</a>
+        <a href="https://github.com/the404devs/404-editor" target="_blank"><i class="fab fa-github"></i>Source Code</a>
         <p id="version-info"></p>
     </div>
 
 
     <div id="userbox" class="sidenav right">
-        <a onclick="closeNav('userbox')"><i class="fas fa-times"></i> Close</a>
+        <a onclick="closeNav('#userbox')"><i class="fas fa-times"></i>Close</a>
         <hr>
         <b>Current User:</b>
         <a class="user-display" onclick="showModal('#profile-modal')">
@@ -63,7 +63,7 @@
             <p id="username"></p>
         </a>
         <hr>
-        <a onclick="logout()"><i class="fas fa-sign-out"></i> Log Out</a>
+        <a onclick="logout()"><i class="fas fa-sign-out"></i>Log Out</a>
     </div>
 
     <div id="login-modal" class="modal do-not-hide">

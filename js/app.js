@@ -204,8 +204,8 @@ function logout() {
     firebase.auth().signOut();
 
     // Close the nav menus
-    closeNav('navbox');
-    closeNav('userbox');
+    closeNav('#navbox');
+    closeNav('#userbox');
     
     // Show the login modal, the welcome text, and the loader icon
     showModal('#login-modal');
@@ -545,7 +545,7 @@ async function joinWorkspace(editorId, owner = user.uid) {
 
     // Hide the join modal and close the navbar,
     hideModal('#join-modal');
-    closeNav('navbox');
+    closeNav('#navbox');
 
     // Perform initial setup of the Ace editor.
     aceSetup(editorId);
@@ -784,7 +784,7 @@ function aceSetup(workspaceName) {
     editor.setOption("customScrollbar", true);
     editor.setOption("animatedScroll", true);
     editor.setOption("wrap", getWordWrap());
-    editor.setOption("scrollPastEnd", 0.5);
+    editor.setOption("scrollPastEnd", 1.0);
     editor.$blockScrolling = Infinity;
     $("#editor").css("font-size", getFontSize() + "px");
 }
@@ -819,12 +819,12 @@ function sanitize(str) {
 
 // Function to open the navigation menu
 function openNav(id) {
-    document.getElementById(id).style.width = "250px";
+    $(id).addClass('shown');
 }
 
 // Function to close the navigation menu
 function closeNav(id) {
-    document.getElementById(id).style.width = "0";
+    $(id).removeClass('shown');
 }
 
 // Function to mark any currently 'active' modals as 'inactive'
@@ -1054,11 +1054,12 @@ document.addEventListener('keyup', (e) => {
     if (e.key === 'Escape') {
         if ($('.modal.active').length > 0) {
             const target = $('.modal.active')[0];
-            if (!target.classList.contains('do-not-hide')){
-                hideModal(`#${target.id}`);
+            if (!target.classList.contains('do-not-hide')) {
+                hideModal(target);
             }
         } else {
-            closeNav('navbox');
+            const target = $('.sidenav.shown')[0];
+            closeNav(target);
         }
     }
 });

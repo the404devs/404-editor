@@ -44,7 +44,6 @@ TODO:
 - Shared workspaces are listed under a separate tab in the 'Join Workspace' menu.
 - The 'Share Workspace' and 'Delete Workspace' menu options will only appear for the owner of the workspace.
 
-
 ### *3.0.1 (09/14/2023)*
 ------------------------
 - We do a little bit of documentation.

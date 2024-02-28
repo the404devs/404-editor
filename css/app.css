@@ -461,6 +461,10 @@ form {
     border-right: 2px solid var(--border);
 }
 
+.sidenav.shown {
+    width: 250px;
+}
+
 .sidenav.right {
     left: unset;
     right: 0;
@@ -472,16 +476,17 @@ form {
     color: var(--text);
     padding: 16px;
     text-decoration: none;
+    border-radius: 0;
     display: block;
     width: 200px;
     margin-left: 5px;
     cursor: pointer;
+    transition: 0.15s ease;
 }
 
 .sidenav > a:hover {
     color: var(--text-alt);
     background-color: var(--theme);
-    transition: 0.5s;
     border-radius: 50px;
 }
 
@@ -513,7 +518,7 @@ form {
 .sidenav i {
     font-size: 20px;
     width: 24px;
-    padding-right: 5px;
+    padding-right: 10px;
 }
 
 .fas.fa-times {
@@ -529,9 +534,12 @@ form {
     text-align: center;
     top: 5px;
     left: 10px;
-    transition: 0.15s;
+    transition: 0.25s ease;
     cursor:pointer;
     font-size: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .menu-open-button#user-open {
@@ -573,7 +581,7 @@ label.small-label {
 }
 
 hr {
-    color: var(--text);
+    color: var(--border);
     width: 100%;
 }
 
