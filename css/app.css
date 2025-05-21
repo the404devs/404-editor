@@ -317,7 +317,7 @@ form {
     padding: 5% 10% 5% 10%;
     overflow-y: scroll;
     width: -webkit-fill-available;
-    max-height: 550px;
+    max-height: 60vh;
     display: flex;
     flex-direction: row;
     align-content: space-between;
