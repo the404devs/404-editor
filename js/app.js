@@ -18,8 +18,8 @@ firebase.firestore().enablePersistence({
     synchronizeTabs: true
 });
 
-const VER = '3.1.1';
-const DATE = '09/20/2023';
+const VER = '3.1.2';
+const DATE = '06/13/2025';
 const NAME = '404-Editor';
 const AUTHOR = 'Owen Bowden';
 
