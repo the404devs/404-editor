@@ -577,7 +577,7 @@ async function joinWorkspace(editorId, owner = user.uid) {
             // Get the queue of edits
             const queue = doc.data().queue || {};
 
-            console.log("Queue length before purge:" + Object.keys(queue).length);
+            // console.log("Queue length before purge:" + Object.keys(queue).length);
 
             // Iterate over each timestamp in the queue
             for (const key in queue) {
