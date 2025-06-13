@@ -19,6 +19,10 @@ https://editor.the404.nl
 - 1.2.2
 - 2.0.5
 
+### *3.1.2 (06/13/2025)*
+------------------------
+- Editor now purges old `queue` entries rather than letting them build up in Firebase, causing errors once a few thousand edits happen
+
 ### *3.1.1 (09/20/2023)*
 ------------------------
 - Added user profile pictures!
