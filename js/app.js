@@ -592,7 +592,7 @@ async function joinWorkspace(editorId, owner = user.uid) {
                     // continue; // Use continue to skip this iteration
 
                     // Attempt at purging old queue entries.
-                    docRef.update({queue: firebase.firestore.FieldValue.arrayRemove(key)}, {merge: true});
+                    docRef.update({`queue.${key}`: firebase.firestore.FieldValue.delete()});
                 }
 
                 // Ignore changes made by this client
