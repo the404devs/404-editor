@@ -589,7 +589,10 @@ async function joinWorkspace(editorId, owner = user.uid) {
                 // Do not apply changes from the past
                 if (lowerBoundTimestamp >= timestampNum) {
                     // console.log('ignoring change from before session load');
-                    continue; // Use continue to skip this iteration
+                    // continue; // Use continue to skip this iteration
+
+                    // Attempt at purging old queue entries.
+                    docRef.update({queue: firebase.firestore.FieldValue.arrayRemove(key)}, {merge: true});
                 }
 
                 // Ignore changes made by this client
