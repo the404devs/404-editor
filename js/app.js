@@ -314,7 +314,7 @@ async function shareWorkspace() {
         }
 
         // Add the target user's UID to the workspace's 'sharedWith' field
-        await workspaceRef.set({
+        await workspaceRef.update({
             sharedWith: firebase.firestore.FieldValue.arrayUnion(targetUserUid)
         }, { merge: true }).then(async function () {
             workspaceSnapshot = await workspaceRef.get();
@@ -342,6 +342,48 @@ async function shareWorkspace() {
         setTimeout(() => { $("#errmsg-share").html(""); }, 3000);
     }
     $('#share-email').val('');
+}
+
+// Function to remove a collaborator from a workspace.
+async function removeCollaborator(targetUserEmail) {
+    try {
+        // Get the UID of the target user based on their email
+        const targetUserSnapshot = await db.collection('users').where('email', '==', targetUserEmail).get();
+
+        if (targetUserSnapshot.empty) {
+            throw Error('User with provided email not found.');
+        }
+
+        if (targetUserEmail == user.email) {
+            throw Error("This is a foolish idea...");
+        }
+
+        const targetUserUid = targetUserSnapshot.docs[0].id;
+
+        // Check if the workspace exists
+        const workspaceRef = db.collection(user.uid).doc(workspaceName);
+        let workspaceSnapshot = await workspaceRef.get();
+
+        if (!workspaceSnapshot.exists) {
+            console.log('Workspace does not exist');
+            return;
+        }
+
+        await workspaceRef.update({
+            sharedWith: firebase.firestore.FieldValue.arrayRemove(targetUserUid)
+        }, { merge: true }).then(async function () {
+            workspaceSnapshot = await workspaceRef.get();
+            getCollaborators(workspaceSnapshot.data().sharedWith);
+        });
+
+        await db.collection('users').doc(targetUserUid).collection('public').doc('sharing').update({
+            sharedOn: firebase.firestore.FieldValue.arrayRemove(`${user.uid}::${workspaceName}`)
+        });
+    } catch (error) {
+        const errorCode = error.code;
+        const errorMessage = error.message;
+        console.log("%c" + errorCode + ": " + errorMessage, "color:red;font-weight:bold;font-style:italic;");
+    }
 }
 
 // Function to pull a list of the user's workspaces and display them
@@ -483,6 +525,8 @@ function getCollaborators(uidArray) {
                 ).append(
                     $("<span>").addClass('details').text(userData.data().email)
                 )
+            ).append(
+                $("<span>").addClass('del-button').text('×').attr('onclick', `removeCollaborators(${userData.data().email})`)
             )
         );
     });
@@ -518,7 +562,8 @@ async function createWorkspace() {
         content: initialContent,
         lang: workspaceLang,
         queue: {},
-        lastUpdated: Date.now().toString()
+        lastUpdated: Date.now().toString(),
+        sharedWith: {}
     });
 
     // Refresh the workspace list now that a new workspace has been created.
