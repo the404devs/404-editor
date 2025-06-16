@@ -585,10 +585,10 @@ async function joinWorkspace(editorId, owner = user.uid) {
     // Perform initial setup of the Ace editor.
     aceSetup(editorId);
     
-    $("#loader").show();
-    $(".welcome").show();
-    $(".header").hide();
-    $("#editor").hide();
+    $("#loader").fadeIn();
+    $(".welcome").fadeIn();
+    $(".header").fadeOut();
+    $("#editor").fadeOut();
     editor.setValue("", -1);
     workspaceName = editorId;
 
