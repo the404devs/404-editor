@@ -589,7 +589,9 @@ async function joinWorkspace(editorId, owner = user.uid) {
     $(".welcome").fadeIn();
     $(".header").fadeOut();
     $("#editor").fadeOut();
+    applyingDeltas = true;
     editor.setValue("", -1);
+    applyingDeltas = false;
     workspaceName = editorId;
 
     if(owner === user.uid) {
