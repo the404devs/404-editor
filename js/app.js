@@ -607,16 +607,13 @@ async function joinWorkspace(editorId, owner = user.uid) {
     closeNav('#navbox');
 
     // Perform initial setup of the Ace editor.
-    console.log("pre ace");
     aceSetup(editorId);
-    console.log("post ace");
 
     // Save the current time. We will use it when listening for changes.
     let lowerBoundTimestamp = Date.now();
     
     // Get a reference to the current document (workspace)
     docRef = db.collection(owner).doc(editorId);
-    console.log("got doc ref");
     
     // Start up the event listener to listen for remote changes and apply them to our local editor.
     unsubscribe = docRef.onSnapshot((doc) => {
@@ -638,14 +635,12 @@ async function joinWorkspace(editorId, owner = user.uid) {
 
             // Get the queue of edits
             const queue = doc.data().queue || {};
-            console.log("got queue");
             
 
             // console.log("Queue length before purge:" + Object.keys(queue).length);
 
             // Iterate over each timestamp in the queue
             for (const key in queue) {
-                console.log("interating queue");
                 
                 // Get the timestamp and data
                 const [timestamp, originSessionId] = key.split(":");
@@ -660,7 +655,6 @@ async function joinWorkspace(editorId, owner = user.uid) {
                     // continue; // Use continue to skip this iteration
 
                     // Attempt at purging old queue entries.
-                    console.log("deleting queue entry");
                     docRef.update({[`queue.${key}`]: firebase.firestore.FieldValue.delete()});
                     continue;
                 }
@@ -674,7 +668,6 @@ async function joinWorkspace(editorId, owner = user.uid) {
                 // Apply the data to the editor. 
                 // Set applyingDeltas=true while modifying the local editor. This flag tells the local event listener to ignore these changes.
                 if (!applyingDeltas) {
-                    console.log("applying changes to editor");
                     applyingDeltas = true;
                     editor.session.doc.applyDeltas([data.event]);
                     applyingDeltas = false;
@@ -754,13 +747,11 @@ async function joinWorkspace(editorId, owner = user.uid) {
         getCollaborators(collaborators);
     }
 
-    console.log("got text content");
     // Get the text content of the workspace
     remoteContent = doc.data().content;
 
     // Fill our editor with it's initial content
     applyingDeltas = true;
-    console.log("applying content");
     editor.setValue(remoteContent, -1);
     applyingDeltas = false;
 
