@@ -608,7 +608,7 @@ ul li {
     cursor: pointer;
 }
 
-ul#collaborator-list div {
+ul#collaborator-list .user-info-box {
     display: flex;
     flex-direction: row;
 }
