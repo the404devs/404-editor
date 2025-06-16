@@ -321,10 +321,16 @@ async function shareWorkspace() {
             getCollaborators(workspaceSnapshot.data().sharedWith);
         });
 
-        await db.collection('users').doc(targetUserUid).collection('public').doc('sharing').update({
-            sharedOn: firebase.firestore.FieldValue.arrayUnion(`${user.uid}::${workspaceName}`)
-        });
-
+        let shareInfo = await db.collection('users').doc(targetUserUid).collection('public').doc('sharing').get();
+        if (!shareInfo.exists) {
+            await db.collection('users').doc(targetUserUid).collection('public').doc('sharing').set({
+                sharedOn: []
+            });
+        } else {
+            await db.collection('users').doc(targetUserUid).collection('public').doc('sharing').update({
+                sharedOn: firebase.firestore.FieldValue.arrayUnion(`${user.uid}::${workspaceName}`)
+            });
+        }
         console.log(`Workspace "${workspaceName}" shared with ${targetUserEmail}`);        
     } catch (error) {
         const errorCode = error.code;
