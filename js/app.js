@@ -528,7 +528,7 @@ function getCollaborators(uidArray) {
                     )
                 ) 
             ).append(
-                $("<span>").addClass('close').text('×').attr('onclick', `removeCollaborators('${userData.data().email}')`)
+                $("<span>").addClass('close').text('×').attr('onclick', `removeCollaborator('${userData.data().email}')`)
             )
         );
     });
