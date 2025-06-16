@@ -18,8 +18,8 @@ firebase.firestore().enablePersistence({
     synchronizeTabs: true
 });
 
-const VER = '3.1.2';
-const DATE = '06/13/2025';
+const VER = '3.1.3';
+const DATE = '06/16/2025';
 const NAME = '404-Editor';
 const AUTHOR = 'Owen Bowden';
 
@@ -526,7 +526,7 @@ function getCollaborators(uidArray) {
                     $("<span>").addClass('details').text(userData.data().email)
                 )
             ).append(
-                $("<span>").addClass('close').text('×').attr('onclick', `removeCollaborators(${userData.data().email})`)
+                $("<span>").addClass('close').text('×').attr('onclick', `removeCollaborators('${userData.data().email}')`)
             )
         );
     });
