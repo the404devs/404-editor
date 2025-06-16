@@ -678,7 +678,7 @@ async function joinWorkspace(editorId, owner = user.uid) {
                     lowerBoundTimestamp = timestampNum;
                 }
             }
-            console.log("Queue length after purge: " + Objetc.keys(queue).length);
+            console.log("Queue length after purge: " + Object.keys(queue).length);
 
             //todo: apply modified queue to editor here.
         } else {
