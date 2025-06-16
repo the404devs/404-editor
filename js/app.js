@@ -679,6 +679,7 @@ async function joinWorkspace(editorId, owner = user.uid) {
                 }
             }
             console.log("Queue length after purge: " + Object.keys(queue).length);
+            docRef.update({queue: queue});
 
             //todo: apply modified queue to editor here.
         } else {
