@@ -582,6 +582,12 @@ async function createWorkspace() {
 
 // Function to join a specified workspace.
 async function joinWorkspace(editorId, owner = user.uid) {
+
+    $("#loader").show();
+    $(".welcome").show();
+    $(".header").hide();
+    $("#editor").hide();
+    editor.setValue("", -1);
     workspaceName = editorId;
 
     if(owner === user.uid) {
@@ -748,12 +754,13 @@ async function joinWorkspace(editorId, owner = user.uid) {
         getCollaborators(collaborators);
     }
 
-
+    console.log("got text content");
     // Get the text content of the workspace
     remoteContent = doc.data().content;
 
     // Fill our editor with it's initial content
     applyingDeltas = true;
+    console.log("applying content");
     editor.setValue(remoteContent, -1);
     applyingDeltas = false;
 
