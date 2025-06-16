@@ -19,6 +19,16 @@ https://editor.the404.nl
 - 1.2.2
 - 2.0.5
 
+
+*TODO:*
+- create icon
+- add password-change form to profile settings
+
+### *3.1.3 (06/16/2025)*
+------------------------
+- Fixed some issues around sharing workspaces
+     - Can also unshare a workspace with someone from the share menu
+
 ### *3.1.2 (06/13/2025)*
 ------------------------
 - Editor now purges old `queue` entries rather than letting them build up in Firebase, causing errors once a few thousand edits happen
@@ -28,13 +38,6 @@ https://editor.the404.nl
 - Added user profile pictures!
     - Profile settings have moved to a new menu on the right-hand side, click the profile picture display in the top-right corner to access it.
     - Can set your username and profile picture from this menu.
-
-TODO:
-- create icon
-- remove sharedOn entries when deleting workspace
-    - currently just being ignored
-- init private/public collection on user creation
-- add password-change form to profile settings
 
 ### *3.1.0 (09/15/2023)*
 ------------------------
