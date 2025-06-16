@@ -638,7 +638,7 @@ async function joinWorkspace(editorId, owner = user.uid) {
             const queue = doc.data().queue || {};
             
 
-            // console.log("Queue length before purge:" + Object.keys(queue).length);
+            console.log("Queue length before purge:" + Object.keys(queue).length);
 
             // Iterate over each timestamp in the queue
             for (const key in queue) {
@@ -656,7 +656,8 @@ async function joinWorkspace(editorId, owner = user.uid) {
                     // continue; // Use continue to skip this iteration
 
                     // Attempt at purging old queue entries.
-                    docRef.update({[`queue.${key}`]: firebase.firestore.FieldValue.delete()});
+                    // docRef.update({[`queue.${key}`]: firebase.firestore.FieldValue.delete()});
+                    delete queue[key];
                     continue;
                 }
 
@@ -677,6 +678,9 @@ async function joinWorkspace(editorId, owner = user.uid) {
                     lowerBoundTimestamp = timestampNum;
                 }
             }
+            console.log("Queue length after purge: " + Objetc.keys(queue).length);
+
+            //todo: apply modified queue to editor here.
         } else {
             console.log('Document does not exist');
             alert('The workspace you are currently viewing has been deleted by another user.');
