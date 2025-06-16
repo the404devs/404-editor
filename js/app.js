@@ -514,17 +514,19 @@ function getCollaborators(uidArray) {
 
         $('#collaborator-list').append(
             $("<li>").append(
-                $("<span>").addClass('pfp-container').append(
-                    $("<i>").addClass('fas fa-user')
+                ${"<div>"}.addClass('user-info-box').append(
+                    $("<span>").addClass('pfp-container').append(
+                        $("<i>").addClass('fas fa-user')
+                    ).append(
+                        $("<img>").addClass('pfp').attr('src', pfpURL)
+                    )
                 ).append(
-                    $("<img>").addClass('pfp').attr('src', pfpURL)
-                )
-            ).append(
-                $("<div>").addClass('info').append(
-                    $("<p>").text(userData.data().name)
-                ).append(
-                    $("<span>").addClass('details').text(userData.data().email)
-                )
+                    $("<div>").addClass('info').append(
+                        $("<p>").text(userData.data().name)
+                    ).append(
+                        $("<span>").addClass('details').text(userData.data().email)
+                    )
+                ) 
             ).append(
                 $("<span>").addClass('close').text('×').attr('onclick', `removeCollaborators('${userData.data().email}')`)
             )
