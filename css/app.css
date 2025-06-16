@@ -608,16 +608,27 @@ ul li {
     cursor: pointer;
 }
 
+ul#collaborator-list div {
+    display: flex;
+    flex-direction: row;
+}
+
 ul#collaborator-list li {
     display: flex;
     flex-direction: row;
     align-items: center;
-    justify-content: flex-start;
+    justify-content: space-between;
 }
 
 ul#collaborator-list li .info {
     margin-left: 15px;
 } 
+
+ul#collaborator-list li .close {
+    position: unset;
+    top: unset;
+    right: unset;
+}
 
 ul li:hover {
     transform: scale(1.03);
