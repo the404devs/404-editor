@@ -514,7 +514,7 @@ function getCollaborators(uidArray) {
 
         $('#collaborator-list').append(
             $("<li>").append(
-                ${"<div>"}.addClass('user-info-box').append(
+                $("<div>").addClass('user-info-box').append(
                     $("<span>").addClass('pfp-container').append(
                         $("<i>").addClass('fas fa-user')
                     ).append(
