@@ -582,7 +582,9 @@ async function createWorkspace() {
 
 // Function to join a specified workspace.
 async function joinWorkspace(editorId, owner = user.uid) {
-
+    // Perform initial setup of the Ace editor.
+    aceSetup(editorId);
+    
     $("#loader").show();
     $(".welcome").show();
     $(".header").hide();
@@ -605,9 +607,6 @@ async function joinWorkspace(editorId, owner = user.uid) {
     // Hide the join modal and close the navbar,
     hideModal('#join-modal');
     closeNav('#navbox');
-
-    // Perform initial setup of the Ace editor.
-    aceSetup(editorId);
 
     // Save the current time. We will use it when listening for changes.
     let lowerBoundTimestamp = Date.now();
