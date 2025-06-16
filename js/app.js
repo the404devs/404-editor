@@ -321,7 +321,7 @@ async function shareWorkspace() {
             getCollaborators(workspaceSnapshot.data().sharedWith);
         });
 
-        await db.collection('users').doc(targetUserUid).collection('public').doc('sharing').set({
+        await db.collection('users').doc(targetUserUid).collection('public').doc('sharing').update({
             sharedOn: firebase.firestore.FieldValue.arrayUnion(`${user.uid}::${workspaceName}`)
         });
 
@@ -946,7 +946,23 @@ async function deleteWorkspace() {
     if (confirm("Are you sure you want to delete this workspace?\n\nThis cannot be undone.")) {
         if (editor) { editor.off("change") }
         if (docRef) { unsubscribe(); }
-        await docRef.delete();
+
+        const doc = await docRef.get();
+
+        doc.data().sharedWith.forEach(async userID => {
+            // console.log("this workspace is shared with "+userID); 
+            const shareInfo = await db.collection('users').doc(userID).collection('public').doc('sharing').get();
+            const listOfWorkspacesSharedWithThisUser = shareInfo.data().sharedOn;
+            const targetKey = `${user.uid}::${workspaceName}`;
+            // console.log(listOfWorkspacesSharedWithThisUser);
+            // console.log(targetKey);
+            await db.collection('users').doc('MJ3YLqNfo9dtYbiOYTbcNAtESIy1').collection('public').doc('sharing').update({
+                sharedOn: firebase.firestore.FieldValue.arrayRemove(targetKey)
+            });
+        });
+
+        
+        await docRef.delete(); //temp, restore
         console.log(`Deleted workspace ${workspaceName}`);
         location.reload();
     }
