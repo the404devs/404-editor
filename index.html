@@ -4,11 +4,12 @@
 <head>
     <title>404-Editor</title>
     <link rel="stylesheet" href="css/app.css" type="text/css" media="screen" charset="utf-8">
+    <link rel="icon" href="./icon_white_1024.png">
     <script src="https://kit.fontawesome.com/a79a931136.js" crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js" integrity="sha512-v2CJ7UaYy4JwqLDIrZUI/4hqeoQieOmAZNXBeQyjo21dadnwR+8ZaIJVT8EE2iyI61OV8e6M8PP2/4hpQINQ/g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.24.2/ace.min.js" integrity="sha512-grCp52F5q+IJVuVwiXiMw+k0kb1b+La0syXiV946onkfBvuI9JBCFVvXZCWAiGvh9yoinMP9Ofchnc7RGwggXw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.24.2/ext-modelist.min.js" integrity="sha512-DX3EQlnl5RQ74Or5jPmLzO2oG2vCw16EXjM+fXdbZBRnpdZoJPMcWWNwCXJDsssxdn/N0ccgQXRuDchglvYGug==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.24.2/ext-themelist.min.js" integrity="sha512-M/jnxQqVwoBAXETz7qs9xmIQX96xnfNo/E/Fmb3MQoluc1RU3JfdiMiSiMkHzm/H/QLrAq2Bn/ySNyecKu9ffQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.42.0/ace.min.js" integrity="sha512-qg6UMWpaeWQGeFaZPyuDXKnureIwMkVqhCCF7GdiWv7bsEDQHVQq3U08ABGNNJFLNM1IZNBJfXGNbpJNl2dkNg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.42.0/ext-modelist.min.js" integrity="sha512-GAp+4Q5VgeCXiNxD89+0KWJwPSLqXM9FgTRLhJxGjB1jjFrb6l9bYUkaTun39gcvZ89FYUXLYQEhLk8TEJztYA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.42.0/ext-themelist.min.js" integrity="sha512-egj+hdS3WDwjcPavY9dXXphQBQk/1jQKY8xpgWpkA7ovrbztfCCRkE0oWn/659+wO8JiRy5dEO2AUlAeOGrIig==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/diff_match_patch/20121119/diff_match_patch.js" integrity="sha512-5YZxUisfaneUbwv58nPp10qwt6DefHuJ+iAfvPoABZAYwLg4WGJHITaLpyyxJdrljfc0ggUoWc87Z0lfoDS84Q==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
@@ -39,7 +40,7 @@
     <div id="navbox" class="sidenav">
         <a onclick="closeNav('#navbox')"><i class="fas fa-times"></i>Close</a>
         <hr>
-        <a onclick="showModal('#join-modal')"><i class="fas fa-sign-in"></i>Join Workspace</a>
+        <a onclick="showModal('#join-modal');"><i class="fas fa-sign-in"></i>Join Workspace</a>
         <a onclick="showModal('#share-modal')" id="share-button"><i class="fas fa-share-alt"></i>Share Workspace</a>
         <a onclick="downloadWorkspace()"><i class="fas fa-download"></i>Download</a>
         <a onclick="deleteWorkspace()" id="delete-button"><i class="fas fa-trash"></i>Delete Workspace</a>
@@ -150,6 +151,9 @@
                 <div class="tabbar">
                     <span class="tab active" id="tab-owned" onclick="showOwnWorkspaces()">My Workspaces</span>
                     <span class="tab" id="tab-shared" onclick="showSharedWorkspaces()">Shared with Me</span>
+                    <!-- <span class="tab" id="tab-refresh" onclick="fetchSharedWorkspaces()">
+                        <i class="fas fa-rotate"></i>
+                    </span> -->
                 </div>
                 <ul id="user-workspace-list"></ul>
                 <ul id="shared-workspace-list"></ul>

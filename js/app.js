@@ -18,8 +18,8 @@ firebase.firestore().enablePersistence({
     synchronizeTabs: true
 });
 
-const VER = '3.1.3';
-const DATE = '06/16/2025';
+const VER = '3.2.0';
+const DATE = '06/17/2025';
 const NAME = '404-Editor';
 const AUTHOR = 'Owen Bowden';
 
@@ -27,11 +27,14 @@ const AUTHOR = 'Owen Bowden';
 const db = firebase.firestore();
 let user;
 let docRef;
+let deltasRef;
+let cursorsRef;
 let editor;
-let unsubscribe;
+let unsubscribe = () => {return};
 let workspaceName;
 let isOwner = false;
 let applyingDeltas = false;
+let disconnecting = false;
 const sessionId = Math.random().toString().slice(2);
 const modelist = ace.require("ace/ext/modelist");
 const themelist = ace.require("ace/ext/themelist");
@@ -47,6 +50,11 @@ const EDITOR_WORD_WRAP = "editor-word-wrap";
 // Initial text to populate new editors with
 const initialContent = `# Welcome to 404-Editor v${VER}!`;
 const initialLang = 'markdown';
+
+const SNAPSHOT_INTERVAL = 20;  // Take a snapshot every 20 deltas
+const remoteMarkers = {};
+const ghostLabels = {};
+const appliedCursorStyles = new Set();
 
 // Function to grab the user's preferred light theme from local storage
 function getLightTheme() {
@@ -469,7 +477,7 @@ async function fetchSharedWorkspaces() {
                     > WORKSPACE_LAST_MODIFIED
                 */
                 // When clicked, each list item is set to call joinWorkspace(id) to then join that particular workspace.
-                $('#shared-workspace-list').append(
+                $('#shared-workspace-list').prepend(
                     $("<li>").append(
                         $("<a>").text(sharedWorkspaceSnap.id)
                     ).append(
@@ -493,6 +501,12 @@ async function fetchSharedWorkspaces() {
                 $('<span>').text('Nothing to show here...')   
             );
         }
+
+        $('#shared-workspace-list').append(
+            $('<button>').addClass('button').on('click', fetchSharedWorkspaces).append(
+                $('<span>').html('Refresh <i class="fas fa-rotate" />')
+            )
+        );
         
     } catch (error) {
         console.error('Error getting shared workspaces:', error);
@@ -563,8 +577,9 @@ async function createWorkspace() {
     await workspaceRef.set({
         content: initialContent,
         lang: workspaceLang,
-        queue: {},
-        lastUpdated: Date.now().toString(),
+        deltaCount: 0,
+        lastUpdated: Date.now(),
+        lastSnapshot: Date.now(),
         sharedWith: {}
     });
 
@@ -580,197 +595,211 @@ async function createWorkspace() {
     joinWorkspace(workspaceName);
 }
 
-// Function to join a specified workspace.
-async function joinWorkspace(editorId, owner = user.uid) {
-    // Perform initial setup of the Ace editor.
+
+function joinWorkspace(editorId, owner = user.uid) {
+    disconnecting = true;
     aceSetup(editorId);
-    
     $("#loader").fadeIn();
     $(".welcome").fadeIn();
     $(".header").fadeOut();
     $("#editor").fadeOut();
-    applyingDeltas = true;
-    editor.setValue("", -1);
-    applyingDeltas = false;
     workspaceName = editorId;
-
-    if(owner === user.uid) {
-        console.log("User owns this workspace.");
-        isOwner = true;
-        $('#share-button').show();
-        $('#delete-button').show();
-    } else {
-        console.log("User was shared this workspace.");
-        isOwner = false;
-        $('#share-button').hide();
-        $('#delete-button').hide();
-    }
 
     // Hide the join modal and close the navbar,
     hideModal('#join-modal');
     closeNav('#navbox');
 
-    // Save the current time. We will use it when listening for changes.
-    let lowerBoundTimestamp = Date.now();
-    
-    // Get a reference to the current document (workspace)
+
     docRef = db.collection(owner).doc(editorId);
-    
-    // Start up the event listener to listen for remote changes and apply them to our local editor.
-    unsubscribe = docRef.onSnapshot((doc) => {
-        // Verify our workspace still exists. Our friend could pull the rug out from under us and delete it.
-        if (doc.exists) {
-            // Get remote language setting
-            const rLang = doc.data().lang;
-            // Get local language setting
-            const cLang = $selectLang.val();
-            // Compare if the remote and client languages match
-            // Ensure the language isn't a null value. 
-            // This caused problems with deleting workspaces, as the null value would trigger an update, recreating the workspace with just a lang key.
-            if (cLang !== rLang && rLang !== null) {
-                // The language has changed, so we need to apply the new language to our local editor.
-                $selectLang.val(rLang).change();
-                // Refresh the workspace list to reflect the language change there, too.
-                fetchUserWorkspaces();
-            }
+    deltasRef = docRef.collection('deltas');
+    cursorsRef = docRef.collection('cursors');
+    let changeUnsubscribe, docUnsubscribe, cursorUnsubscribe;
+    let lastSent = { row: -1, column: -1 };
+    let snapshotTime, localDeltaCount = 0;
 
-            // Get the queue of edits
-            const queue = doc.data().queue || {};
-            
-
-            console.log("Queue length before purge:" + Object.keys(queue).length);
-
-            // Iterate over each timestamp in the queue
-            for (const key in queue) {
-                
-                // Get the timestamp and data
-                const [timestamp, originSessionId] = key.split(":");
-                const data = queue[key];
-
-                // Convert timestamp to a number
-                const timestampNum = parseInt(timestamp);
-
-                // Do not apply changes from the past
-                if (lowerBoundTimestamp >= timestampNum) {
-                    // console.log('ignoring change from before session load');
-                    // continue; // Use continue to skip this iteration
-
-                    // Attempt at purging old queue entries.
-                    // docRef.update({[`queue.${key}`]: firebase.firestore.FieldValue.delete()});
-                    delete queue[key];
-                    continue;
-                }
-
-                // Ignore changes made by this client
-                if (originSessionId === sessionId) {
-                    // console.log('ignoring self change');
-                    continue; // Use continue to skip this iteration
-                }
-
-                // Apply the data to the editor. 
-                // Set applyingDeltas=true while modifying the local editor. This flag tells the local event listener to ignore these changes.
-                if (!applyingDeltas) {
-                    applyingDeltas = true;
-                    editor.session.doc.applyDeltas([data.event]);
-                    applyingDeltas = false;
-
-                    // Update the lowerBoundTimestamp, so no changes before this one are applied again.
-                    lowerBoundTimestamp = timestampNum;
-                }
-            }
-            console.log("Queue length after purge: " + Object.keys(queue).length);
-            docRef.update({queue: queue});
-
-            //todo: apply modified queue to editor here.
+    // Load initial content
+    docRef.get().then((doc) => {
+        // Don't propagate content changes
+        applyingDeltas = true;
+        if (!doc.exists) {
+            editor.setValue("", -1);
+            alert('deleted doc');
         } else {
-            console.log('Document does not exist');
-            alert('The workspace you are currently viewing has been deleted by another user.');
-            location.reload();
+            // Initialize editor with latest content snapshot
+            const data = doc.data();
+
+            if(owner === user.uid) {
+                console.log("User owns this workspace.");
+                isOwner = true;
+                $('#share-button').show();
+                $('#delete-button').show();
+            } else {
+                console.log("User was shared this workspace.");
+                isOwner = false;
+                $('#share-button').hide();
+                $('#delete-button').hide();
+            }
+
+            if (data.content != null) {
+                // console.log("setting base content");
+                editor.setValue(data.content, -1);
+                localDeltaCount = data.deltaCount || 0;
+                snapshotTime = data.lastSnapshot || 0;
+            }
+
+            // Listen for remote deltas
+            // Filter out those from before the most recent snapshot
+            changeUnsubscribe = deltasRef.where("timestamp", ">", snapshotTime).orderBy("timestamp").onSnapshot((snapshot) => {
+                snapshot.docChanges().forEach((change) => {
+                    const data = change.doc.data();
+                    // console.log("Delta: " + data.timestamp, "Snap: " + snapshotTime);
+                    // Ignore any deltas from our current session.
+                    if (data.sessionId === sessionId) return;
+                    // Apply the change to our content
+                    applyingDeltas = true;
+                    try {
+                        editor.session.doc.applyDelta(data.delta);
+                    } finally {
+                        applyingDeltas = false;
+                    }
+                });
+            });
         }
-      }, (error) => {
-        console.error('Error getting document:', error);
-    });
+        applyingDeltas = false;
 
-    // Start up the event listener on the local editor, to push changes to the server
-    editor.on('change', function (e) {
-        // If the applyingDeltas flag is set, we ignore the changes as they are simply remote changes being applied to our local editor.
-        if (applyingDeltas) { return; }
+        // Handle local changes
+        const changeHandler = (delta) => {
+            // Ignore the change if its a delta being applied to the editor
+            if (applyingDeltas) return;
 
-        // Store the current timestamp.
-        const timestamp = Date.now().toString();
-    
-        // Get the current text content of the editor.
-        const newContent = editor.getValue();
+            // Get local timestamp of change
+            let changeTime = Date.now();
+            // Push the delta to remote
+            deltasRef.add({
+                userId: user.uid,
+                // timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                timestamp: changeTime,
+                sessionId: sessionId,
+                delta
+            });
 
-        // Create a unique identifying key for this edit using the current timestamp and the local session ID.
-        const key = `${timestamp}:${sessionId}`;
-    
-        // Create an object to store the data for this edit.
-        const updateData = {};
-        // We store the following:
-        /*
-            by: sessionId -> ID unique to this session (browser window)
-            author: user.uid -> The unique ID of the user who made the change
-            event: e -> The event emitted by the editor, describing the actual changes made.
-        */
-        updateData[key] = { by: sessionId, author: user.uid, event: e };
-    
-        // Merge the updateData object into the editor's queue,
-        // set the editor's last modified time,
-        // and set the content of the editor to the new content.
-        docRef.set(
-            { content: newContent, queue: updateData, lastUpdated: timestamp },
-            { merge: true }
-        )
-        // .then(() => {
-        //     console.log('Document successfully updated!');
-        // })
-        .catch((error) => {
-            console.error('Error updating document:', error);
+
+            // Snapshot the content every 20 deltas
+            localDeltaCount++;
+            if (localDeltaCount >= SNAPSHOT_INTERVAL) {
+                changeTime++;
+                const content = editor.getValue();
+                docRef.set({
+                    content,
+                    deltaCount: 0,
+                    lastSnapshot: changeTime,
+                    lastUpdated: changeTime
+                }, { merge: true });
+                localDeltaCount = 0;
+            } else {
+                docRef.set({
+                    deltaCount: localDeltaCount,
+                    lastUpdated: changeTime
+                }, { merge: true });
+            }
+        };
+        editor.on("change", changeHandler);
+
+        const sendCursorUpdate = () => {
+            const pos = editor.getCursorPosition();
+            if (pos.row === lastSent.row && pos.column === lastSent.column) return;
+
+            lastSent = pos;
+
+            cursorsRef.doc(user.uid).set({
+                userId: user.uid,
+                userName: user.displayName,
+                row: pos.row,
+                column: pos.column,
+                timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                active: true
+            });
+        };
+        editor.selection.on('changeCursor', sendCursorUpdate);
+
+        // Event listener for the language selector. 
+        let langHandler = $("#select-lang").change(function() {
+            // Set the language in the Firebase object
+            // This is a preference per editor
+            docRef.set({ lang: this.value }, { merge: true });
+            // Set the editor language
+            editor.session.setMode("ace/mode/" + this.value);
+            // Refresh the workspace list
+            // fetchUserWorkspaces();
         });
 
-        // Note that, even though we set the editor's content with this change, it isn't read by other currently connected clients.
-        // They only listen on the `queue` object.
-        // The editor's content is only read by clients when initially loading and setting the content of the local editor
+
+        docUnsubscribe = docRef.onSnapshot(snapshot => {
+            if (snapshot.exists) {
+                // Get remote language setting
+                const rLang = snapshot.data().lang;
+                // Get local language setting
+                const cLang = langHandler.val();
+                // Compare if the remote and client languages match
+                // Ensure the language isn't a null value. 
+                // This caused problems with deleting workspaces, as the null value would trigger an update, recreating the workspace with just a lang key.
+                if (cLang !== rLang && rLang !== null) {
+                    // The language has changed, so we need to apply the new language to our local editor.
+                    langHandler.val(rLang).change();
+                    // Refresh the workspace list to reflect the language change there, too.
+                    fetchUserWorkspaces();
+                }
+            } else {
+                handlePermFail();
+            }
+        }, (error) => {
+            handlePermFail();
+        });
+
+        cursorUnsubscribe = cursorsRef.onSnapshot(snapshot => {
+            if (disconnecting || applyingDeltas) return;
+            snapshot.docChanges().forEach(change => {
+                const data = change.doc.data();
+                if (data.userId === user.uid) return;
+                const pos = { row: data.row, column: data.column };
+                displayRemoteCursor(data.userId, pos, data.userName, data.active);
+            });
+        });
+
+
+
+        // Hide the spinner and other loading crap, show the editor and buttons
+        $("#loader").fadeOut();
+        $(".welcome").fadeOut();
+        $(".header").fadeIn();
+        $("#editor").fadeIn();
+        $("#join-close").fadeIn();
+        $("#join-modal").removeClass("do-not-hide");
+
+        editor.session.on('changeScrollTop', () => {
+            setTimeout(applyHoverEventsToMarkers, 500);
+        });
+        editor.session.on('changeScrollLeft', () => {
+            setTimeout(applyHoverEventsToMarkers, 500);
+        });
+        disconnecting = false;
+        sendCursorUpdate();
+        // And finally, focus the editor!      
+        editor.focus();
     });
 
-    // Event listener for the language selector. 
-    let $selectLang = $("#select-lang").change(function() {
-        // Set the language in the Firebase object
-        // This is a preference per editor
-        docRef.set({ lang: this.value }, { merge: true });
-        // Set the editor language
-        editor.session.setMode("ace/mode/" + this.value);
-        // Refresh the workspace list
-        // fetchUserWorkspaces();
-    });
+    
 
-    // Grab the workspace object
-    let doc = await docRef.get();
-
-    if (isOwner) {
-        const collaborators = doc.data().sharedWith || [];
-        getCollaborators(collaborators);
+    unsubscribe = () => {
+        disconnecting = true;
+        editor.off('change');
+        editor.selection.off('changeCursor');
+        changeUnsubscribe();
+        cursorUnsubscribe();
+        cursorsRef.doc(user.uid).update({active: false});
+        docUnsubscribe();
+        disconnecting = false;
     }
-
-    // Get the text content of the workspace
-    remoteContent = doc.data().content;
-
-    // Fill our editor with it's initial content
-    applyingDeltas = true;
-    editor.setValue(remoteContent, -1);
-    applyingDeltas = false;
-
-    // Hide the spinner and other loading crap, show the editor and buttons
-    $("#loader").fadeOut();
-    $(".welcome").fadeOut();
-    $(".header").fadeIn();
-    $("#editor").fadeIn();
-    $("#join-close").fadeIn();
-    $("#join-modal").removeClass("do-not-hide");
-
-    // And finally, focus the editor!      
-    editor.focus();
 }
 
 // Function to perform initial setup of the Ace editor.
@@ -830,7 +859,8 @@ function aceSetup(workspaceName) {
     // and set it's initial value in the preferences window.
     $("#font-size").change(function() {
         // Update font size
-        $("#editor").css("font-size", this.value + "px");
+        // $("#editor").css("font-size", this.value + "px");
+        editor.setOption('fontSize', parseInt(this.value));
 
         try {
             localStorage.setItem(EDITOR_FONT_SIZE, this.value);
@@ -858,7 +888,15 @@ function aceSetup(workspaceName) {
     editor.setOption("wrap", getWordWrap());
     editor.setOption("scrollPastEnd", 1.0);
     editor.$blockScrolling = Infinity;
-    $("#editor").css("font-size", getFontSize() + "px");
+    editor.setOption('fontSize', parseInt(getFontSize()));
+}
+
+// Function to handle disconnect due to permission revoke or workspace delete 
+function handlePermFail() {
+    unsubscribe();
+    console.error('Document does not exist or permissions have been revoked.');
+    alert('The workspace you are currently viewing has been deleted.');
+    location.reload();
 }
 
 // Function to calculate the diff between two strings
@@ -1000,8 +1038,10 @@ function downloadWorkspace() {
         return getSelectedOption(document.getElementById("select-lang")).id;
     }
 
+    const suffix = determineLang().split("|")[0];
+
     const text = editor.getValue();
-    const fullname = workspaceName + determineLang(); //Construct the complete filename from the name of the editor and the file extension
+    const fullname = `${workspaceName}.${suffix}`; //Construct the complete filename from the name of the editor and the file extension
     save(text, fullname, "txt"); //Save the file with our save function. Type is plain text, since that's all these kind of files are
 }
 
@@ -1010,27 +1050,59 @@ async function deleteWorkspace() {
     //Double check they understand what the trash can symbol means
     if (confirm("Are you sure you want to delete this workspace?\n\nThis cannot be undone.")) {
         if (editor) { editor.off("change") }
-        if (docRef) { unsubscribe(); }
-
-        const doc = await docRef.get();
-
-        doc.data().sharedWith.forEach(async userID => {
-            // console.log("this workspace is shared with "+userID); 
-            const shareInfo = await db.collection('users').doc(userID).collection('public').doc('sharing').get();
-            const listOfWorkspacesSharedWithThisUser = shareInfo.data().sharedOn;
-            const targetKey = `${user.uid}::${workspaceName}`;
-            // console.log(listOfWorkspacesSharedWithThisUser);
-            // console.log(targetKey);
-            await db.collection('users').doc('MJ3YLqNfo9dtYbiOYTbcNAtESIy1').collection('public').doc('sharing').update({
-                sharedOn: firebase.firestore.FieldValue.arrayRemove(targetKey)
-            });
-        });
-
         
-        await docRef.delete(); //temp, restore
+        const doc = await docRef.get();
+        
+        const usersThisDocIsSharedTo = doc.data().sharedWith;
+        if (usersThisDocIsSharedTo && usersThisDocIsSharedTo.length > 0) {
+            usersThisDocIsSharedTo.forEach(async userID => {
+                // console.log("this workspace is shared with "+userID); 
+                const targetKey = `${user.uid}::${workspaceName}`;
+                await db.collection('users').doc(userID).collection('public').doc('sharing').update({
+                    sharedOn: firebase.firestore.FieldValue.arrayRemove(targetKey)
+                });
+            });
+        }
+        const subcollections = ['deltas', 'cursors'];
+        // docRef.set({deleting: true}, {merge: true});
+        deleteDocumentAndKnownSubcollections(docRef, subcollections);
         console.log(`Deleted workspace ${workspaceName}`);
-        location.reload();
+        // if (docRef) { unsubscribe(); }
     }
+}
+
+// Helper function to delete docs in a collection in batches
+async function deleteDocumentAndKnownSubcollections(docRef, subcollectionNames = [], batchSize = 500) {
+    async function deleteCollectionInBatches(collectionRef) {
+        let snapshot;
+        do {
+            try {
+                snapshot = await collectionRef.limit(batchSize).get();
+                if (snapshot.empty) break;
+
+                const batch = db.batch();
+                for (const doc of snapshot.docs) {
+                    await deleteDocumentAndKnownSubcollections(doc.ref, subcollectionNames, batchSize);
+                    batch.delete(doc.ref);
+                }
+                await batch.commit();
+            } catch (error) {
+                console.error(error);
+            }
+            
+        } while (snapshot.size === batchSize);
+    }
+
+    // Delete known subcollections
+    for (const name of subcollectionNames) {
+        const subcolRef = docRef.collection(name);
+        await deleteCollectionInBatches(subcolRef);
+    }
+
+    $('#editor').hide();
+    $('#loader').show();
+    closeNav('#navBox');
+    await docRef.delete();
 }
 
 // Function to send a password reset email
@@ -1088,8 +1160,8 @@ async function setUserPFP(){
     const pfpFile = document.getElementById('pfp-upload').files[0];
     if (pfpFile) {
         const userPicRef = storage.child(`user-profile-images/${user.uid}`);
-        console.log(pfpFile);
-        console.log(userPicRef);
+        // console.log(pfpFile);
+        // console.log(userPicRef);
     
         userPicRef.put(pfpFile).then(() => {
             userPicRef.getDownloadURL().then((url) => {
@@ -1126,6 +1198,104 @@ function updateProfile() {
     hideModal('#profile-modal');
 }
 
+function applyHoverEventsToMarkers () {
+    const markers = document.querySelectorAll(`.remote-cursor`);
+    if (markers) {
+        markers.forEach(marker => {
+            marker.onmouseover = () => {
+                $(`.ghost-label.${marker.classList[1]}`).fadeIn();
+            }
+            marker.onmouseleave = () => {
+                $(`.ghost-label.${marker.classList[1]}`).fadeOut();
+            }
+        });
+    }
+}
+
+function displayRemoteCursor(userId, position, username, active) {
+    const session = editor.getSession();
+
+    // Remove old marker
+    if (remoteMarkers[userId]) {
+        session.removeMarker(remoteMarkers[userId].line);
+        session.removeMarker(remoteMarkers[userId].label, true);
+        try {
+            document.querySelector(`.ghost-label.${userId}`).remove();
+        } catch {}
+    }
+
+    if (!active) return;
+
+    const safeUserId = userId.replace(/[^a-zA-Z0-9_-]/g, '');
+    const className = `${safeUserId}`;
+
+    // Add color styles if not yet defined
+    if (!appliedCursorStyles.has(className)) {
+        const color = getUserColor(userId);
+        const style = document.createElement("style");
+        style.textContent = `
+            .remote-cursor.${className} {
+                border-left: 2px solid ${color};
+            }
+            .ghost-label.${className} {
+                background: ${color};
+            }
+        `;
+        document.head.appendChild(style);
+        appliedCursorStyles.add(className);
+    }
+
+    // Add the vertical cursor marker
+    const range = new ace.Range(position.row, position.column, position.row, position.column + 1);
+    const markerId = session.addMarker(range, 'remote-cursor ' + className, "text", true);
+    setTimeout(applyHoverEventsToMarkers, 500);
+
+    
+
+    // Add dynamic DOM label using `updateDom`
+    const markerEl = document.createElement("div");
+    markerEl.className = `ghost-label ${className}`;
+    markerEl.textContent = username;
+
+    const dynamicMarker = {
+        el: markerEl,
+        update: function(html, markerLayer, session, config) {
+            const coords = editor.renderer.textToScreenCoordinates(position.row, position.column);
+            let left = coords.pageX;
+            let top = coords.pageY - editor.getOption('fontSize') - editor.container.offsetTop - 2;
+            if (top < 0) {
+                markerEl.classList.add('flip');
+                top += editor.getOption('fontSize')*2;
+            } else {
+                markerEl.classList.remove('flip');
+            }
+            markerEl.style.top = `${top}px`;
+            markerEl.style.left = `${left}px`;
+        },
+        updateDom: true
+    };
+
+    editor.container.appendChild(markerEl);
+    const labelId = session.addDynamicMarker(dynamicMarker, true);
+
+    remoteMarkers[userId] = {
+        line: markerId,
+        label: labelId,
+    };
+}
+
+
+function getUserColor(userId) {
+    // Simple hash to hue
+    let hash = 0;
+    for (let i = 0; i < userId.length; i++) {
+        hash = userId.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    const hue = Math.abs(hash % 360);
+    return `hsl(${hue}deg 70% 50% / 60%)`; // Bright, readable color
+}
+
+
 // Run initialization on page load.
 window.addEventListener('DOMContentLoaded', init);
 
@@ -1136,6 +1306,8 @@ window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e =
         setUITheme();
     }
 });
+
+window.onbeforeunload = () => { unsubscribe(); };
 
 // Detect press of the Escape key, and hide the active modal or the navbar, whichever is relevant.
 document.addEventListener('keyup', (e) => {

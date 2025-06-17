@@ -1,5 +1,5 @@
 # 404-Editor
-
+<img align=left height="70" src="https://github.com/the404devs/404-editor/blob/master/icon_white_1024.png">
 An online code editor written in JS, making use of Firebase.
 
 Originally written on May 15, 2018 during class because I didn't want to work on our Java assignment.
@@ -21,8 +21,18 @@ https://editor.the404.nl
 
 
 *TODO:*
-- create icon
 - add password-change form to profile settings
+
+
+### *3.2.0 (06/17/2025)*
+------------------------
+- Finally got around to making an icon for this project
+- New feature: cursor markers for remote users (see where people are typing)
+- Made editor `deltas` get stored in a subcollection in the backend rather than a field
+    - This prevents the field-size limits I was encountering, while still preserving full edit history.
+- Editor content is only updated on the backend every 20 deltas, and when joining a workspace the editor will load the last content snapshot, followed by all deltas since then.
+- Added a *Refresh* button to the Shared Workspace list.
+- Fixed an issue regarding the file extension of a downloaded workspace.
 
 ### *3.1.3 (06/16/2025)*
 ------------------------

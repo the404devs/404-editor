@@ -85,9 +85,10 @@ body {
     left: 0;
     display: none;
     height: calc(100% - 52px);
-    z-index: 10000000;
+    z-index: 10;
     border-top: 2px solid var(--border);
     font-family: "Inconsolata" !important;
+    overflow: visible;
 }
 
 #workspace-name {
@@ -586,12 +587,12 @@ hr {
 }
 
 ul {
-    text-align: left;
+    text-align: center;
     padding: 0;
     width: 100%;
 }
 
-ul span {
+ul > span {
     color: var(--border-alt);
 }
 
@@ -602,6 +603,7 @@ ul li {
     border-radius: var(--border-radius);
     padding: 10px;
     margin-bottom: 10px;
+    text-align: left;
     background-color: var(--background-transparent);
     box-shadow: var(--shadow);
     transition: 0.2s ease;
@@ -790,4 +792,38 @@ ul li:hover a.link {
     display: flex;
     align-items: center;
     justify-content: flex-start;
+}
+
+.remote-cursor {
+    position: absolute;
+    /* background: rgba(255, 0, 0, 0.4); */
+    background: transparent;
+    border-radius: 0 !important;
+    border: 0;
+    width: 2px;
+    pointer-events: all;
+}
+
+.ghost-label {
+    position: absolute;
+    z-index: 20;
+    font-size: 0.75em;
+    padding: 2px;
+    color: white;
+    font-family: 'Raleway';
+    font-weight: bold;
+    border-radius: 3px 3px 3px 0;
+    white-space: nowrap;
+    pointer-events: none;
+    /* opacity: 0; */
+    display: none;
+    backdrop-filter: brightness(0.8) blur(5px);
+}
+
+.ghost-label.flip {
+    border-radius: 0 3px 3px 3px;
+}
+
+.theme-light .ghost-label {
+    color: black;
 }
