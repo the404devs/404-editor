@@ -1,5 +1,5 @@
 # 404-Editor
-<img align=left height="200" src="https://github.com/the404devs/404-editor/blob/master/icon_white_1024.png">
+<img align=left height="200" src="https://github.com/the404devs/404-editor/blob/master/icon_transparent_1024.png">
 An online code editor written in JS, making use of Firebase.
 
 Originally written on May 15, 2018 during class because I didn't want to work on our Java assignment.
