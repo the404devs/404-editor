@@ -792,11 +792,11 @@ function joinWorkspace(editorId, owner = user.uid) {
 
     unsubscribe = () => {
         disconnecting = true;
+        cursorsRef.doc(user.uid).update({active: false});
         editor.off('change');
         editor.selection.off('changeCursor');
         changeUnsubscribe();
         cursorUnsubscribe();
-        cursorsRef.doc(user.uid).update({active: false});
         docUnsubscribe();
         disconnecting = false;
     }
