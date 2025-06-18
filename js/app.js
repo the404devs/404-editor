@@ -775,6 +775,7 @@ function joinWorkspace(editorId, owner = user.uid) {
         $("#editor").fadeIn();
         $("#join-close").fadeIn();
         $("#join-modal").removeClass("do-not-hide");
+        editor.session.setMode("ace/mode/" + $("#select-lang").val());
 
         editor.session.on('changeScrollTop', () => {
             setTimeout(applyHoverEventsToMarkers, 500);
