@@ -628,9 +628,11 @@ function joinWorkspace(editorId, owner = user.uid) {
             // Initialize editor with latest content snapshot
             const data = doc.data();
 
+            
             if(owner === user.uid) {
                 console.log("User owns this workspace.");
                 isOwner = true;
+                getCollaborators(data.sharedWith);
                 $('#share-button').show();
                 $('#delete-button').show();
             } else {
