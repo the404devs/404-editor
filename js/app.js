@@ -772,7 +772,7 @@ function joinWorkspace(editorId, owner = user.uid) {
                 const data = change.doc.data();
                 // Ignore cursors from our own edit session
                 const inactiveThreshold = Date.now() - (CURSOR_INACTIVE_TIMEOUT * 60000);
-                // console.log("Cursor active:", data.timestamp);
+                console.log("Cursor active:", data.timestamp);
                 // console.log("Now:", currentTime);
                 if (data.userId === user.uid && data.sessionId === sessionId && data.timestamp.toMillis() > inactiveThreshold) return;
                 const pos = { row: data.row, column: data.column };
