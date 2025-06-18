@@ -807,7 +807,8 @@ function joinWorkspace(editorId, owner = user.uid) {
 
     unsubscribe = () => {
         disconnecting = true;
-        cursorsRef.doc(`${user.uid}::${sessionId}`).update({active: false});
+        // cursorsRef.doc(`${user.uid}::${sessionId}`).update({active: false});
+        cursorsRef.doc(`${user.uid}::${sessionId}`).delete();
         editor.off('change');
         editor.selection.off('changeCursor');
         changeUnsubscribe();
