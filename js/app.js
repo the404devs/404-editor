@@ -711,9 +711,12 @@ function joinWorkspace(editorId, owner = user.uid) {
 
             lastSent = pos;
 
-            cursorsRef.doc(user.uid).set({
+            // FUTURE: differentiate by sessionID. not doing it now bc I don't want to clutter the db
+            // cursorsRef.doc(`${user.uid}::${sessionId}`).set({
+            cursorsRef.doc(`${user.uid}`).set({
                 userId: user.uid,
                 userName: user.displayName,
+                sessionId: sessionId,
                 row: pos.row,
                 column: pos.column,
                 timestamp: firebase.firestore.FieldValue.serverTimestamp(),
@@ -760,7 +763,8 @@ function joinWorkspace(editorId, owner = user.uid) {
             if (disconnecting || applyingDeltas) return;
             snapshot.docChanges().forEach(change => {
                 const data = change.doc.data();
-                if (data.userId === user.uid) return;
+                // Ignore cursors from our own edit session
+                if (data.userId === user.uid && data.sessionId === sessionId) return;
                 const pos = { row: data.row, column: data.column };
                 displayRemoteCursor(data.userId, pos, data.userName, data.active);
             });
