@@ -632,9 +632,11 @@ function joinWorkspace(editorId, owner = user.uid) {
             if(owner === user.uid) {
                 console.log("User owns this workspace.");
                 isOwner = true;
-                getCollaborators(data.sharedWith);
                 $('#share-button').show();
                 $('#delete-button').show();
+                if (data.sharedWith && Object.keys(data.sharedWith).length > 0) {
+                    getCollaborators(data.sharedWith);
+                }
             } else {
                 console.log("User was shared this workspace.");
                 isOwner = false;
