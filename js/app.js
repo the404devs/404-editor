@@ -14,9 +14,9 @@ firebase.firestore().settings({
     cacheSizeBytes: firebase.firestore.CACHE_SIZE_UNLIMITED,
     merge: true
 });
-firebase.firestore().enablePersistence({
-    synchronizeTabs: true
-});
+// firebase.firestore().enablePersistence({
+//     synchronizeTabs: true
+// });
 
 const VER = '3.2.0';
 const DATE = '06/17/2025';
