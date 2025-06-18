@@ -659,6 +659,10 @@ function joinWorkspace(editorId, owner = user.uid) {
                     applyingDeltas = true;
                     try {
                         editor.session.doc.applyDelta(data.delta);
+                    } catch (error) {
+                        console.log("Bad Delta:");
+                        console.log(data.delta);
+                        console.error(error);
                     } finally {
                         applyingDeltas = false;
                     }
