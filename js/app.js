@@ -52,6 +52,7 @@ const initialContent = `# Welcome to 404-Editor v${VER}!`;
 const initialLang = 'markdown';
 
 const SNAPSHOT_INTERVAL = 20;  // Take a snapshot every 20 deltas
+const CURSOR_INACTIVE_TIMEOUT = 10; // Minutes
 const remoteMarkers = {};
 const ghostLabels = {};
 const appliedCursorStyles = new Set();
@@ -770,10 +771,10 @@ function joinWorkspace(editorId, owner = user.uid) {
             snapshot.docChanges().forEach(change => {
                 const data = change.doc.data();
                 // Ignore cursors from our own edit session
-                const currentTime = Date.now();
-                console.log("Cursor active:", data.timestamp);
-                console.log("Now:", currentTime);
-                if (data.userId === user.uid && data.sessionId === sessionId) return;
+                const inactiveThreshold = Date.now() - (CURSOR_INACTIVE_TIMEOUT * 60000);
+                // console.log("Cursor active:", data.timestamp);
+                // console.log("Now:", currentTime);
+                if (data.userId === user.uid && data.sessionId === sessionId && data.timestamp.toMillis() > inactiveThreshold) return;
                 const pos = { row: data.row, column: data.column };
                 displayRemoteCursor(data.userId, pos, data.userName, data.active);
             });
