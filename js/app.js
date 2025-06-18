@@ -662,7 +662,6 @@ function joinWorkspace(editorId, owner = user.uid) {
                     // Apply the change to our content
                     applyingDeltas = true;
                     try {
-                        console.log(data);
                         editor.session.doc.applyDelta(data.delta);
                     } catch (error) {
                         console.log("Bad Delta:");
@@ -720,9 +719,7 @@ function joinWorkspace(editorId, owner = user.uid) {
 
             lastSent = pos;
 
-            // FUTURE: differentiate by sessionID. not doing it now bc I don't want to clutter the db
-            // cursorsRef.doc(`${user.uid}::${sessionId}`).set({
-            cursorsRef.doc(`${user.uid}`).set({
+            cursorsRef.doc(`${user.uid}::${sessionId}`).set({
                 userId: user.uid,
                 userName: user.displayName,
                 sessionId: sessionId,
@@ -773,6 +770,9 @@ function joinWorkspace(editorId, owner = user.uid) {
             snapshot.docChanges().forEach(change => {
                 const data = change.doc.data();
                 // Ignore cursors from our own edit session
+                const currentTime = Date.now();
+                console.log("Cursor active:", data.timestamp);
+                console.log("Now:", currentTime);
                 if (data.userId === user.uid && data.sessionId === sessionId) return;
                 const pos = { row: data.row, column: data.column };
                 displayRemoteCursor(data.userId, pos, data.userName, data.active);
