@@ -774,7 +774,7 @@ function joinWorkspace(editorId, owner = user.uid) {
                 const inactiveThreshold = Date.now() - (CURSOR_INACTIVE_TIMEOUT * 60000);
                 console.log("Cursor active:", data);
                 // console.log("Now:", currentTime);
-                if (data.userId === user.uid && data.sessionId === sessionId && data.timestamp.toMillis() > inactiveThreshold) return;
+                if (data.userId === user.uid && data.sessionId === sessionId && data.timestamp && data.timestamp.toMillis() > inactiveThreshold) return;
                 const pos = { row: data.row, column: data.column };
                 displayRemoteCursor(data.userId, pos, data.userName, data.active);
             });
